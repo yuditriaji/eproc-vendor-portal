@@ -20,7 +20,11 @@ const baseQuery = fetchBaseQuery({
 });
 
 // Enhanced base query with retry logic and token refresh
-const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+const baseQueryWithReauth = async (
+  args: Parameters<typeof baseQuery>[0],
+  api: Parameters<typeof baseQuery>[1],
+  extraOptions: Parameters<typeof baseQuery>[2]
+) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
@@ -36,12 +40,13 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
     if (refreshResult.data) {
       // Store new token and retry original request
-      const refreshData = refreshResult.data as any;
+      const refreshData = refreshResult.data as { accessToken: string };
       api.dispatch({
         type: 'auth/setCredentials',
         payload: {
           token: refreshData.accessToken,
-          user: refreshData.user,
+          // Keep existing user data
+          user: (api.getState() as any).auth.user,
         },
       });
 
@@ -49,6 +54,10 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     } else {
       // Refresh failed, logout user
       api.dispatch({ type: 'auth/logout' });
+      // Redirect to login if we're not already there
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
   }
 
@@ -69,5 +78,3 @@ export const baseApi = createApi({
   endpoints: () => ({}),
 });
 
-// Export the base API for extending
-export { baseApi };

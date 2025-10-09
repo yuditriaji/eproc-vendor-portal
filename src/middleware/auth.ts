@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
-
-// Secret key for JWT verification (should be in environment variables)
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'your-secret-key-here'
-);
 
 // Protected routes that require authentication
 const protectedRoutes = [
   '/vendor/dashboard',
+  '/vendor/bids',
   '/vendor/submit',
   '/api/vendor',
 ];
 
-// Public routes that don't require authentication
+// Public routes that don't need authentication
 const publicRoutes = [
+  '/vendor/login',
   '/vendor/register',
-  '/api/auth/register',
-  '/api/auth/login',
 ];
 
 export async function authMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // If it's not a vendor route, continue without auth check
+  if (!pathname.startsWith('/vendor') && !pathname.startsWith('/api/vendor')) {
+    return NextResponse.next();
+  }
 
   // Check if this is a protected route
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -29,58 +28,27 @@ export async function authMiddleware(request: NextRequest) {
   );
 
   // Check if this is a public route
-  const isPublicRoute = publicRoutes.some(route =>
+  const isPublicRoute = publicRoutes.some(route => 
     pathname.startsWith(route)
   );
-
-  // If it's not a vendor route, continue without auth check
-  if (!pathname.startsWith('/vendor') && !pathname.startsWith('/api/vendor')) {
-    return NextResponse.next();
-  }
 
   // Get token from cookies
   const token = request.cookies.get('auth-token')?.value;
 
-  // If no token and accessing protected route, redirect to register
+  // If no token and accessing protected route, redirect to login
   if (!token && isProtectedRoute) {
-    const redirectUrl = new URL('/vendor/register', request.url);
+    const redirectUrl = new URL('/vendor/login', request.url);
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If token exists, verify it
-  if (token) {
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      
-      // Add user info to request headers for API routes
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-user-id', payload.sub as string);
-      requestHeaders.set('x-user-email', payload.email as string);
-      
-      // If verified and accessing register page, redirect to dashboard
-      if (pathname === '/vendor/register') {
-        return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
-      }
-
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-    } catch (error) {
-      // Token is invalid, remove it and redirect if accessing protected route
-      const response = isProtectedRoute
-        ? NextResponse.redirect(new URL('/vendor/register', request.url))
-        : NextResponse.next();
-
-      // Clear invalid token
-      response.cookies.delete('auth-token');
-      return response;
-    }
+  // If token exists and accessing login/register, redirect to dashboard
+  // (This helps prevent users from accessing login page when already logged in)
+  if (token && isPublicRoute) {
+    return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
   }
 
-  // Continue for public routes
+  // Continue for all other routes
   return NextResponse.next();
 }
 
@@ -113,9 +81,13 @@ export function rateLimit(
 }
 
 // IP-based rate limiting middleware
-export function withRateLimit(handler: any, limit = 10, windowMs = 60000) {
+export function withRateLimit(
+  handler: (request: NextRequest) => Promise<NextResponse> | NextResponse,
+  limit = 10,
+  windowMs = 60000
+) {
   return async (request: NextRequest) => {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     
     if (!rateLimit(ip, limit, windowMs)) {
       return new NextResponse('Too Many Requests', { status: 429 });

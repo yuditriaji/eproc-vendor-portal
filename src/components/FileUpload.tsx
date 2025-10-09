@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { FilePond, File, registerPlugin } from 'react-filepond';
+import { useRef, useState } from 'react';
+import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
-import { DocumentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sanitizeFileName } from '@/utils/sanitizers';
 
@@ -24,7 +23,7 @@ interface FileUploadProps {
   maxFiles?: number;
   maxFileSize?: string;
   acceptedFileTypes?: string[];
-  onUpdateFiles?: (files: File[]) => void;
+  onUpdateFiles?: (files: any[]) => void;
   disabled?: boolean;
   className?: string;
   label?: string;
@@ -38,7 +37,7 @@ interface FilePreview {
   name: string;
   size: number;
   type: string;
-  url?: string;
+  url?: string | undefined;
 }
 
 export default function FileUpload({
@@ -59,14 +58,13 @@ export default function FileUpload({
   error,
   required = false,
 }: FileUploadProps) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
   const [previews, setPreviews] = useState<FilePreview[]>([]);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const pondRef = useRef<any>(null);
+  const pondRef = useRef<FilePond>(null);
 
-  const handleUpdateFiles = (fileItems: File[]) => {
+  const handleUpdateFiles = (fileItems: any[]) => {
     setFiles(fileItems);
-    onUpdateFiles?.(fileItems);
+    onUpdateFiles?.(fileItems.map((item: any) => item.file));
 
     // Generate previews
     const newPreviews: FilePreview[] = fileItems.map((fileItem) => {
@@ -96,18 +94,6 @@ export default function FileUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) {
-      return '🖼️';
-    } else if (type.includes('pdf')) {
-      return '📄';
-    } else if (type.includes('word')) {
-      return '📝';
-    } else if (type.includes('excel') || type.includes('sheet')) {
-      return '📊';
-    }
-    return '📎';
-  };
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -129,9 +115,7 @@ export default function FileUpload({
           labelIdle={`
             <div class="flex flex-col items-center justify-center py-8 text-center">
               <div class="mb-4">
-                <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
+                <div class="w-12 h-12 mx-auto bg-gray-400 rounded"></div>
               </div>
               <div class="text-lg font-medium text-gray-900 mb-2">
                 Drop files here or <span class="text-primary-600 underline">browse</span>
@@ -143,11 +127,9 @@ export default function FileUpload({
           `}
           className="file-upload-pond"
           credits={false}
-          beforeDropFile={(file) => {
-            setIsDragOver(false);
+          beforeDropFile={() => {
             return true;
           }}
-          onprocessfilestart={() => setIsDragOver(false)}
           stylePanelLayout="compact"
           styleButtonRemoveItemPosition="right"
           styleLoadIndicatorPosition="center bottom"
@@ -183,7 +165,7 @@ export default function FileUpload({
                         />
                       ) : (
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <DocumentIcon className="w-6 h-6 text-gray-400" />
+                          <div className="w-6 h-6 bg-gray-400 rounded" />
                         </div>
                       )}
                     </div>
@@ -202,7 +184,7 @@ export default function FileUpload({
                       onClick={() => handleRemoveFile(preview.id)}
                       className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors duration-200 opacity-0 group-hover:opacity-100"
                     >
-                      <XMarkIcon className="w-5 h-5" />
+                      <div className="w-5 h-5 bg-red-500 rounded" />
                     </button>
                   </div>
                 </motion.div>
@@ -222,9 +204,7 @@ export default function FileUpload({
           animate={{ opacity: 1, scale: 1 }}
           className="text-sm text-red-600 flex items-center space-x-1"
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
+          <div className="w-4 h-4 bg-red-600 rounded" />
           <span>{error}</span>
         </motion.p>
       )}

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { authMiddleware, withSecurityHeaders, withRateLimit } from './middleware/auth';
+import { authMiddleware, withSecurityHeaders } from './middleware/auth';
 
 export async function middleware(request: NextRequest) {
   // Apply security headers to all responses

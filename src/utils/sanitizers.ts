@@ -4,7 +4,7 @@ import * as yup from 'yup';
 // Configure DOMPurify for safe HTML sanitization
 const configureDOMPurify = () => {
   if (typeof window !== 'undefined') {
-    return DOMPurify.create(window);
+    return DOMPurify;
   }
   return null;
 };
@@ -17,7 +17,6 @@ export const sanitizeHtml = (dirty: string): string => {
   return purify.sanitize(dirty, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 'br', 'p', 'ul', 'ol', 'li'],
     ALLOWED_ATTR: [],
-    FORBID_SCRIPT: true,
     FORBID_TAGS: ['script', 'iframe', 'object', 'embed'],
   });
 };
@@ -92,7 +91,7 @@ export const sanitizeUrl = (url: string): string => {
     }
     
     return urlObj.toString();
-  } catch (error) {
+  } catch {
     throw new Error('Invalid URL format');
   }
 };
@@ -140,6 +139,11 @@ export const validationSchemas = {
       .min(10, 'Phone number too short')
       .max(20, 'Phone number too long')
       .required('Phone number is required'),
+    
+    documents: yup
+      .mixed<FileList>()
+      .nullable()
+      .required(),
   }),
 
   // Bid submission schema
@@ -169,12 +173,12 @@ export const validationSchemas = {
   fileUpload: yup.object({
     file: yup
       .mixed()
-      .test('fileSize', 'File too large', (value: any) => {
-        if (!value) return true;
+      .test('fileSize', 'File too large', (value) => {
+        if (!value || !(value instanceof File)) return true;
         return value.size <= 10485760; // 10MB
       })
-      .test('fileType', 'Invalid file type', (value: any) => {
-        if (!value) return true;
+      .test('fileType', 'Invalid file type', (value) => {
+        if (!value || !(value instanceof File)) return true;
         const allowedTypes = [
           'application/pdf',
           'application/msword',
@@ -274,7 +278,8 @@ export const encryptSensitiveData = async (data: string, key: string): Promise<s
 // Content Security Policy nonce generator
 export const generateNonce = (): string => {
   if (typeof window === 'undefined') {
-    return require('crypto').randomBytes(16).toString('base64');
+    const crypto = require('crypto');
+    return crypto.randomBytes(16).toString('base64');
   }
   
   const array = new Uint8Array(16);
@@ -283,7 +288,10 @@ export const generateNonce = (): string => {
 };
 
 // Prevent prototype pollution
-export const safeObjectAssign = (target: any, source: any): any => {
+export const safeObjectAssign = (
+  target: Record<string, unknown>,
+  source: Record<string, unknown>
+): Record<string, unknown> => {
   const safeKeys = Object.keys(source).filter(key => 
     key !== '__proto__' && 
     key !== 'constructor' && 
@@ -293,7 +301,7 @@ export const safeObjectAssign = (target: any, source: any): any => {
   const result = { ...target };
   safeKeys.forEach(key => {
     if (source[key] !== null && typeof source[key] === 'object') {
-      result[key] = safeObjectAssign(target[key] || {}, source[key]);
+      result[key] = safeObjectAssign((target[key] as Record<string, unknown>) || {}, source[key] as Record<string, unknown>);
     } else {
       result[key] = source[key];
     }

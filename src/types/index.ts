@@ -2,12 +2,17 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
-  company: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  role: 'ADMIN' | 'USER' | 'VENDOR';
+  verified?: boolean;
+  createdAt: string;
+  // Legacy fields for compatibility
+  name?: string;
+  company?: string;
   phone?: string;
   avatar?: string;
-  verified: boolean;
-  createdAt: string;
 }
 
 export interface AuthState {
@@ -23,19 +28,37 @@ export interface Tender {
   id: string;
   title: string;
   description: string;
-  category: string;
-  region: string;
-  budget: number;
-  currency: string;
-  deadline: string;
+  requirements?: Record<string, unknown>;
+  criteria?: Record<string, unknown>;
+  estimatedValue?: number;
+  closingDate: string;
+  category?: string;
+  department?: string;
   status: TenderStatus;
-  requirements: TenderRequirement[];
-  attachments: TenderAttachment[];
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  creator?: {
+    username: string;
+    role: string;
+  };
+  bids?: Record<string, unknown>[];
+  // Legacy fields for compatibility
+  region?: string;
+  budget?: number;
+  currency?: string;
+  deadline?: string;
+  attachments?: TenderAttachment[];
 }
 
-export type TenderStatus = 'open' | 'pending' | 'closed' | 'awarded';
+export type TenderStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'AWARDED' | 'CANCELLED';
+
+// Legacy status mapping
+export const LegacyTenderStatus = {
+  'open': 'PUBLISHED',
+  'pending': 'DRAFT', 
+  'closed': 'CLOSED',
+  'awarded': 'AWARDED'
+} as const;
 
 export interface TenderRequirement {
   id: string;
@@ -66,17 +89,44 @@ export interface Bid {
   tenderId: string;
   vendorId: string;
   status: BidStatus;
-  price: number;
-  currency: string;
-  requirements: BidRequirement[];
-  attachments: BidAttachment[];
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+  encryptedData?: string;
+  decryptedData?: {
+    technicalProposal: Record<string, unknown>;
+    commercialProposal: Record<string, unknown>;
+    financialProposal: Record<string, unknown>;
+  };
+  tender: {
+    title: string;
+    status: string;
+    closingDate?: string;
+  };
+  vendor?: {
+    username: string;
+    email: string;
+  };
+  // Legacy fields for compatibility
+  price?: number;
+  currency?: string;
+  requirements?: BidRequirement[];
+  attachments?: BidAttachment[];
   score?: number;
   feedback?: string;
-  submittedAt: string;
-  updatedAt: string;
 }
 
-export type BidStatus = 'draft' | 'submitted' | 'under_review' | 'scored' | 'accepted' | 'rejected';
+export type BidStatus = 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'SCORED' | 'ACCEPTED' | 'REJECTED';
+
+// Legacy status mapping
+export const LegacyBidStatus = {
+  'draft': 'DRAFT',
+  'submitted': 'SUBMITTED',
+  'under_review': 'UNDER_REVIEW',
+  'scored': 'SCORED',
+  'accepted': 'ACCEPTED',
+  'rejected': 'REJECTED'
+} as const;
 
 export interface BidRequirement {
   requirementId: string;
@@ -114,7 +164,7 @@ export interface RegisterFormData {
   name: string;
   company: string;
   phone: string;
-  documents: FileList | null;
+  documents?: FileList | null;
 }
 
 export interface BidFormData {

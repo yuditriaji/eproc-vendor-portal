@@ -1,14 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { baseApi } from './api/baseApi';
+import { procurementApi } from './api/procurementApi';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
-import type { RootState } from '@/types';
 
 export const store = configureStore({
   reducer: {
-    // API reducer
+    // API reducers
     [baseApi.reducerPath]: baseApi.reducer,
+    [procurementApi.reducerPath]: procurementApi.reducer,
     
     // Feature reducers
     auth: authReducer,
@@ -28,10 +29,11 @@ export const store = configureStore({
           'persist/REGISTER',
         ],
         // Ignore these field paths in the state
-        ignoredPaths: ['api.queries'],
+        ignoredPaths: ['api.queries', 'procurementApi.queries'],
       },
     })
       .concat(baseApi.middleware)
+      .concat(procurementApi.middleware)
       .concat([
         // Add custom middleware for analytics, logging, etc.
       ]),
