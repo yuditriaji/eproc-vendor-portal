@@ -1,11 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
-
-// Get tenant from environment or default
-const TENANT = process.env.NEXT_PUBLIC_TENANT || 'default';
+import { getApiUrl } from '@/lib/tenant';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/${TENANT}`,
+  baseUrl: getApiUrl(),
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
     

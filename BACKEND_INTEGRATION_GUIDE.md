@@ -19,13 +19,15 @@ https://eproc-sourcing-backend.onrender.com/api/v1/default/auth/login
 
 ### Environment Configuration
 
+**For Development (localhost):**
+
 Create `.env.local` file:
 
 ```env
 # Backend API
 NEXT_PUBLIC_API_URL=https://eproc-sourcing-backend.onrender.com/api/v1
 
-# Your tenant slug
+# Your tenant slug (for localhost development)
 NEXT_PUBLIC_TENANT=default
 
 # WebSocket (if needed)
@@ -38,6 +40,14 @@ NEXT_PUBLIC_MAX_FILE_SIZE=10485760
 # Environment
 NEXT_PUBLIC_ENVIRONMENT=development
 ```
+
+**For Production (Subdomain-based):**
+
+The tenant is automatically extracted from the subdomain:
+- `acme.synnova.com` → API calls to `/api/v1/acme/`
+- `global.synnova.com` → API calls to `/api/v1/global/`
+
+See `DEPLOYMENT_GUIDE.md` for complete production deployment instructions.
 
 ## Authentication Flow
 
