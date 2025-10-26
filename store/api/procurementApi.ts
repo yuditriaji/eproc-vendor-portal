@@ -9,14 +9,14 @@ export const procurementApi = baseApi.injectEndpoints({
       { page?: number; pageSize?: number; status?: string; search?: string }
     >({
       query: (params) => ({
-        url: '/tenders',
+        url: 'tenders',
         params,
       }),
       providesTags: ['Tenders'],
     }),
     
     getTenderById: builder.query<ApiResponse<Tender>, string>({
-      query: (id) => `/tenders/${id}`,
+      query: (id) => `tenders/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Tenders', id }],
     }),
     
@@ -26,20 +26,20 @@ export const procurementApi = baseApi.injectEndpoints({
       { page?: number; pageSize?: number; status?: string }
     >({
       query: (params) => ({
-        url: '/bids',
+        url: 'bids',
         params,
       }),
       providesTags: ['Bids'],
     }),
     
     getBidById: builder.query<ApiResponse<Bid>, string>({
-      query: (id) => `/bids/${id}`,
+      query: (id) => `bids/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Bids', id }],
     }),
     
     createBid: builder.mutation<ApiResponse<Bid>, Partial<Bid>>({
       query: (data) => ({
-        url: '/bids',
+        url: 'bids',
         method: 'POST',
         body: data,
       }),
@@ -48,7 +48,7 @@ export const procurementApi = baseApi.injectEndpoints({
     
     updateBid: builder.mutation<ApiResponse<Bid>, { id: string; data: Partial<Bid> }>({
       query: ({ id, data }) => ({
-        url: `/bids/${id}`,
+        url: `bids/${id}`,
         method: 'PUT',
         body: data,
       }),
@@ -57,7 +57,7 @@ export const procurementApi = baseApi.injectEndpoints({
     
     submitBid: builder.mutation<ApiResponse<Bid>, string>({
       query: (id) => ({
-        url: `/bids/${id}/submit`,
+        url: `bids/${id}/submit`,
         method: 'POST',
       }),
       invalidatesTags: (_result, _error, id) => [{ type: 'Bids', id }, 'Bids'],
@@ -65,7 +65,7 @@ export const procurementApi = baseApi.injectEndpoints({
     
     // Dashboard
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
-      query: () => '/dashboard/stats',
+      query: () => 'dashboard/stats',
       providesTags: ['Dashboard'],
     }),
   }),

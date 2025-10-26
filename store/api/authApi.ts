@@ -8,7 +8,7 @@ export const authApi = baseApi.injectEndpoints({
       LoginCredentials
     >({
       query: (credentials) => ({
-        url: '/auth/login',
+        url: 'auth/login',
         method: 'POST',
         body: credentials,
       }),
@@ -16,11 +16,11 @@ export const authApi = baseApi.injectEndpoints({
     }),
     
     register: builder.mutation<
-      ApiResponse<{ user: User; token: string }>,
+      ApiResponse<{ user: User; token: string; userId?: string }>,
       RegisterData
     >({
       query: (data) => ({
-        url: '/auth/register',
+        url: 'auth/register',
         method: 'POST',
         body: data,
       }),
@@ -28,14 +28,14 @@ export const authApi = baseApi.injectEndpoints({
     
     logout: builder.mutation<ApiResponse<null>, void>({
       query: () => ({
-        url: '/auth/logout',
+        url: 'auth/logout',
         method: 'POST',
       }),
       invalidatesTags: ['Auth'],
     }),
     
     getCurrentUser: builder.query<ApiResponse<User>, void>({
-      query: () => '/auth/me',
+      query: () => 'auth/me',
       providesTags: ['Auth'],
     }),
     
@@ -44,9 +44,20 @@ export const authApi = baseApi.injectEndpoints({
       void
     >({
       query: () => ({
-        url: '/auth/refresh',
+        url: 'auth/refresh',
         method: 'POST',
       }),
+    }),
+    
+    verifyUser: builder.mutation<
+      ApiResponse<{ user: User }>,
+      string
+    >({
+      query: (userId) => ({
+        url: `auth/users/${userId}/verify`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Auth'],
     }),
   }),
 });
@@ -57,4 +68,5 @@ export const {
   useLogoutMutation,
   useGetCurrentUserQuery,
   useRefreshTokenMutation,
+  useVerifyUserMutation,
 } = authApi;

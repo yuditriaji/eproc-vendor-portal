@@ -75,6 +75,7 @@ eproc-vendor-portal/
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
    NEXT_PUBLIC_WS_URL=ws://localhost:3000
+   NEXT_PUBLIC_TENANT=default
    NEXT_PUBLIC_UPLOAD_URL=http://localhost:3000/uploads
    NEXT_PUBLIC_MAX_FILE_SIZE=10485760
    NEXT_PUBLIC_ENVIRONMENT=development
@@ -117,17 +118,29 @@ eproc-vendor-portal/
 The authentication system uses JWT tokens with the following flow:
 
 1. User logs in at `/vendor/login`
-2. API returns JWT token and user data
+2. API returns JWT token and user data (from `/:tenant/auth/login`)
 3. Token stored in localStorage and Redux store
 4. Protected routes check authentication status
 5. Token included in all API requests via RTK Query
 
-### Test Credentials (Mock API)
+### Multi-Tenant API Structure
 
+All API requests are sent to:
 ```
-Email: vendor@eproc.local
-Password: vendor123
+{BASE_URL}/api/v1/{tenant}/{resource}
 ```
+
+Example:
+```
+POST https://api.example.com/api/v1/default/auth/login
+GET  https://api.example.com/api/v1/default/tenders
+```
+
+The tenant slug is configured via `NEXT_PUBLIC_TENANT` environment variable.
+
+### Test Credentials
+
+Use your admin account credentials to test. VENDOR accounts require ADMIN verification before they can login.
 
 ## 📡 API Integration
 
@@ -143,20 +156,23 @@ All API endpoints are configured through RTK Query with automatic:
 ### Available Endpoints
 
 **Authentication:**
-- `POST /auth/login` - User login
-- `POST /auth/register` - User registration
-- `POST /auth/logout` - User logout
-- `GET /auth/me` - Get current user
-- `POST /auth/refresh` - Refresh token
+- `POST /:tenant/auth/login` - User login
+- `POST /:tenant/auth/register` - User registration (VENDOR requires admin verification)
+- `PATCH /:tenant/auth/users/:userId/verify` - Verify vendor account (ADMIN only)
+- `POST /:tenant/auth/logout` - User logout
+- `GET /:tenant/auth/me` - Get current user
+- `POST /:tenant/auth/refresh` - Refresh token
 
 **Procurement:**
-- `GET /tenders` - List tenders (with pagination/filters)
-- `GET /tenders/:id` - Get tender details
-- `GET /bids` - List user bids
-- `POST /bids` - Create bid
-- `PUT /bids/:id` - Update bid
-- `POST /bids/:id/submit` - Submit bid
-- `GET /dashboard/stats` - Dashboard statistics
+- `GET /:tenant/tenders` - List tenders (with pagination/filters)
+- `GET /:tenant/tenders/:id` - Get tender details
+- `GET /:tenant/bids` - List user bids
+- `POST /:tenant/bids` - Create bid
+- `PUT /:tenant/bids/:id` - Update bid
+- `POST /:tenant/bids/:id/submit` - Submit bid
+- `GET /:tenant/dashboard/stats` - Dashboard statistics
+
+**Note:** Replace `:tenant` with your actual tenant slug (configured in `NEXT_PUBLIC_TENANT`).
 
 ## 🧩 Key Features Implemented
 
