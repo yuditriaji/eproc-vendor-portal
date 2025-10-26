@@ -69,16 +69,17 @@ export default function TenderDetailPage({ params }: TenderDetailPageProps) {
   const isClosed = daysRemaining <= 0;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2 flex-1">
-          <Button variant="ghost" size="sm" asChild className="-ml-2">
-            <Link href="/vendor/tenders">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Tenders
-            </Link>
-          </Button>
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" asChild className="-ml-2">
+          <Link href="/vendor/tenders">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Tenders
+          </Link>
+        </Button>
+        
+        <div className="space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge className={
               tender.status === 'PUBLISHED' ? 'bg-green-500/10 text-green-700 dark:text-green-400' :
@@ -91,16 +92,18 @@ export default function TenderDetailPage({ params }: TenderDetailPageProps) {
               <Badge variant="destructive">Closing Soon</Badge>
             )}
           </div>
-          <h1 className="text-3xl font-bold">{tender.title}</h1>
-          <p className="text-muted-foreground">{tender.referenceNumber}</p>
+          
+          <h1 className="text-2xl md:text-3xl font-bold">{tender.title}</h1>
+          <p className="text-muted-foreground text-sm">{tender.referenceNumber}</p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
-            Download RFP
+            <span className="hidden sm:inline">Download RFP</span>
+            <span className="sm:hidden">Download</span>
           </Button>
-          <Button size="lg" disabled={isClosed} asChild={!isClosed}>
+          <Button className="w-full sm:w-auto" disabled={isClosed} asChild={!isClosed}>
             <Link href={`/vendor/bids/new?tender=${id}`}>
               <Send className="mr-2 h-4 w-4" />
               Submit Bid
@@ -113,13 +116,21 @@ export default function TenderDetailPage({ params }: TenderDetailPageProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="qa">Q&A</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="requirements" className="text-xs sm:text-sm">Reqs</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs sm:text-sm">Docs</TabsTrigger>
+              <TabsTrigger value="timeline" className="hidden md:flex text-xs sm:text-sm">Timeline</TabsTrigger>
+              <TabsTrigger value="qa" className="hidden md:flex text-xs sm:text-sm">Q&A</TabsTrigger>
             </TabsList>
+            
+            {/* Mobile-only dropdown for additional tabs */}
+            <div className="md:hidden mt-2">
+              <select className="w-full p-2 border rounded-md bg-background">
+                <option value="timeline">Timeline</option>
+                <option value="qa">Q&A</option>
+              </select>
+            </div>
 
             <TabsContent value="overview" className="space-y-4">
               <Card>

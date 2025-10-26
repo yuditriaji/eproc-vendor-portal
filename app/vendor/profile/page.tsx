@@ -12,7 +12,7 @@ import { Building2, User, Bell, FileText, Save } from 'lucide-react';
 
 export default function ProfilePage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Profile Settings</h1>
@@ -22,22 +22,26 @@ export default function ProfilePage() {
       </div>
 
       <Tabs defaultValue="company" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="company">
-            <Building2 className="h-4 w-4 mr-2" />
-            Company
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+          <TabsTrigger value="company" className="text-xs sm:text-sm">
+            <Building2 className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Company</span>
+            <span className="xs:hidden">Co.</span>
           </TabsTrigger>
-          <TabsTrigger value="account">
-            <User className="h-4 w-4 mr-2" />
-            Account
+          <TabsTrigger value="account" className="text-xs sm:text-sm">
+            <User className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Account</span>
+            <span className="xs:hidden">Acc.</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4 mr-2" />
-            Notifications
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm">
+            <Bell className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Notifications</span>
+            <span className="xs:hidden">Notifs</span>
           </TabsTrigger>
-          <TabsTrigger value="documents">
-            <FileText className="h-4 w-4 mr-2" />
-            Documents
+          <TabsTrigger value="documents" className="text-xs sm:text-sm">
+            <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Documents</span>
+            <span className="xs:hidden">Docs</span>
           </TabsTrigger>
         </TabsList>
 

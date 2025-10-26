@@ -160,41 +160,86 @@ export function TendersTable({ tenders }: TendersTableProps) {
   });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="hover:bg-muted/50">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+    <>
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No tenders found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="hover:bg-muted/50">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No tenders found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {tenders.length > 0 ? (
+          tenders.map((tender) => {
+            const daysRemaining = getDaysRemaining(tender.closingDate);
+            const isUrgent = daysRemaining <= 7 && daysRemaining > 0;
+            
+            return (
+              <Link
+                key={tender.id}
+                href={`/vendor/tenders/${tender.id}`}
+                className="block p-4 border rounded-lg hover:bg-accent transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-medium line-clamp-2 flex-1">{tender.title}</h3>
+                  <Badge className={
+                    tender.status === 'PUBLISHED' ? 'bg-green-500/10 text-green-700 dark:text-green-400' :
+                    tender.status === 'CLOSED' ? 'bg-red-500/10 text-red-700 dark:text-red-400' :
+                    'bg-gray-500/10 text-gray-700 dark:text-gray-400'
+                  }>
+                    {tender.status}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">{tender.organization?.name}</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {tender.estimatedValue ? formatCurrency(tender.estimatedValue, tender.currency) : 'N/A'}
+                  </span>
+                  <span className={isUrgent ? 'text-orange-600 font-medium' : 'text-muted-foreground'}>
+                    {daysRemaining} days left
+                  </span>
+                </div>
+              </Link>
+            );
+          })
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            No tenders found.
+          </div>
+        )}
+      </div>
+    </>
   );
 }

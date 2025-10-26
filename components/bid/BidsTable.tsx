@@ -193,7 +193,8 @@ export function BidsTable({ bids }: BidsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -228,6 +229,60 @@ export function BidsTable({ bids }: BidsTableProps) {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {bids.length > 0 ? (
+          bids.map((bid) => {
+            const status = bid.status;
+            const statusConfig: Record<string, { label: string; className: string }> = {
+              DRAFT: { label: 'Draft', className: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' },
+              SUBMITTED: { label: 'Submitted', className: 'bg-blue-500/10 text-blue-700 dark:text-blue-400' },
+              UNDER_REVIEW: { label: 'Under Review', className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
+              ACCEPTED: { label: 'Accepted', className: 'bg-green-500/10 text-green-700 dark:text-green-400' },
+              REJECTED: { label: 'Rejected', className: 'bg-red-500/10 text-red-700 dark:text-red-400' },
+              WITHDRAWN: { label: 'Withdrawn', className: 'bg-gray-500/10 text-gray-700 dark:text-gray-400' },
+            };
+            const config = statusConfig[status] || statusConfig.DRAFT;
+
+            return (
+              <Link
+                key={bid.id}
+                href={`/vendor/bids/${bid.id}`}
+                className="block p-4 border rounded-lg hover:bg-accent transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1">
+                    <h3 className="font-medium line-clamp-2 mb-1">
+                      {bid.tender?.title || 'Untitled Tender'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {bid.tender?.organization?.name || 'N/A'}
+                    </p>
+                  </div>
+                  <Badge className={config.className}>{config.label}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-3 pt-3 border-t">
+                  <span className="text-muted-foreground">Bid Amount</span>
+                  <span className="font-medium">
+                    {bid.bidAmount ? formatCurrency(bid.bidAmount, bid.currency) : 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-2">
+                  <span className="text-muted-foreground">Submitted</span>
+                  <span>
+                    {bid.submittedAt ? formatDate(bid.submittedAt) : status === 'DRAFT' ? 'Not submitted' : 'N/A'}
+                  </span>
+                </div>
+              </Link>
+            );
+          })
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            No bids found.
+          </div>
+        )}
       </div>
     </div>
   );

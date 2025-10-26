@@ -38,7 +38,7 @@ export default function TendersPage() {
   const totalPages = tendersResponse?.meta?.totalPages || 1;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
