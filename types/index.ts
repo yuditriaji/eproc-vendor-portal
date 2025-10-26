@@ -35,11 +35,16 @@ export type TenderStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'CANCELLED' | 'AWA
 export interface Tender {
   id: string;
   title: string;
-  description: string;
-  organization: string;
-  estimatedValue: number;
+  description?: string;
+  referenceNumber?: string;
+  organization?: {
+    name: string;
+    id?: string;
+  };
+  estimatedValue?: number;
   currency: string;
-  publishedDate: string;
+  publishedDate?: string;
+  createdAt?: string;
   closingDate: string;
   status: TenderStatus;
   category?: string;
@@ -62,11 +67,20 @@ export type BidStatus = 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'R
 export interface Bid {
   id: string;
   tenderId: string;
-  tenderTitle: string;
+  tender?: {
+    id: string;
+    title: string;
+    organization?: {
+      name: string;
+    };
+  };
+  referenceNumber?: string;
   vendorId: string;
-  amount: number;
+  bidAmount?: number;
   currency: string;
-  submittedDate?: string;
+  submittedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   status: BidStatus;
   documents?: BidDocument[];
   technicalProposal?: string;
@@ -163,10 +177,17 @@ export interface ApiResponse<T> {
 
 export interface PaginatedResponse<T> {
   data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  // Legacy flat properties for backward compatibility
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
 }
 
 // Form types

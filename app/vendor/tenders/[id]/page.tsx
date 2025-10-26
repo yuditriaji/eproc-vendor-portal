@@ -267,7 +267,7 @@ export default function TenderDetailPage({ params }: TenderDetailPageProps) {
                         }`} />
                         <div className="flex-1">
                           <p className="font-medium">{event.label}</p>
-                          <p className="text-sm text-muted-foreground">{formatDate(event.date)}</p>
+                          <p className="text-sm text-muted-foreground">{event.date ? formatDate(event.date) : 'TBA'}</p>
                         </div>
                       </div>
                     ))}

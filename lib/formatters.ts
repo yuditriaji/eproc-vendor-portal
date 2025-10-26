@@ -60,3 +60,13 @@ export function formatNumber(value: number, decimals: number = 0): string {
     maximumFractionDigits: decimals,
   }).format(value);
 }
+
+/**
+ * Calculate days remaining until a date
+ */
+export function getDaysRemaining(targetDate: string | Date): number {
+  const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+  const now = new Date();
+  const diffInMs = target.getTime() - now.getTime();
+  return Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+}
