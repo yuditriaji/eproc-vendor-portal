@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FolderOpen, Search, Upload, Download, FileText, File, Filter } from 'lucide-react';
+import { FolderOpen, Search, Upload, Download, FileText, File } from 'lucide-react';
 
 type DocumentCategory = 'CONTRACT' | 'INVOICE' | 'CERTIFICATE' | 'PROPOSAL' | 'OTHER';
 

@@ -89,7 +89,7 @@ export function isRouteAllowed(user: User | null, path: string): boolean {
 
   // Check route prefixes
   if (path.startsWith('/admin')) {
-    return user.role === 'ADMIN';
+    return false; // Only admin can access, already checked above
   }
   
   if (path.startsWith('/buyer')) {

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Search } from 'lucide-react';
+import { Building2, Plus } from 'lucide-react';
 
 export default function CompanyCodesPage() {
   const [showForm, setShowForm] = useState(false);

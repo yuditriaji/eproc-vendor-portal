@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   LayoutDashboard,
   Building2,
@@ -17,7 +16,7 @@ import {
   Menu,
   X,
   ChevronDown,
-  Sitemap
+  Network
 } from 'lucide-react';
 
 interface NavItem {
@@ -49,7 +48,7 @@ const navigation: NavItem[] = [
       },
       {
         title: 'Organization',
-        icon: Sitemap,
+        icon: Network,
         children: [
           {
             title: 'Company Codes',
@@ -136,7 +135,7 @@ function NavItemComponent({ item, level = 0 }: { item: NavItem; level?: number }
           </div>
           <ChevronDown className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')} />
         </button>
-        {isOpen && (
+        {isOpen && item.children && (
           <div className="mt-1 space-y-1">
             {item.children.map((child, index) => (
               <NavItemComponent key={index} item={child} level={level + 1} />
@@ -197,13 +196,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 p-4">
+          <div className="flex-1 overflow-y-auto p-4">
             <nav className="space-y-1">
               {navigation.map((item, index) => (
                 <NavItemComponent key={index} item={item} />
               ))}
             </nav>
-          </ScrollArea>
+          </div>
         </div>
       </aside>
 

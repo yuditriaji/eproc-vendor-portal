@@ -2,10 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { 
-  LayoutDashboard, 
   Users, 
   Building2, 
   Database, 
@@ -68,8 +66,8 @@ export default function AdminDashboardPage() {
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
-              <Card key={action.title} className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-                <Link href={action.href}>
+              <Link key={action.title} href={action.href}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex flex-col items-center text-center space-y-3">
                       <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -81,8 +79,8 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
                   </CardContent>
-                </Link>
-              </Card>
+                </Card>
+              </Link>
             );
           })}
         </div>
