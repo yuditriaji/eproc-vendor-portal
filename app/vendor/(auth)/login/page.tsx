@@ -49,9 +49,17 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const result = await login(data).unwrap();
+      console.log('Login response:', result);
       
-      if (result.success && result.data) {
-        dispatch(setCredentials(result.data));
+      // Handle both wrapped and unwrapped responses
+      const responseData = result.data || result;
+      
+      if (responseData && (responseData.accessToken || responseData.token)) {
+        // Extract token and user from response
+        const token = responseData.accessToken || responseData.token;
+        const user = responseData.user;
+        
+        dispatch(setCredentials({ token, user }));
         toast.success('Login successful!');
         router.push('/vendor/dashboard');
       } else {
