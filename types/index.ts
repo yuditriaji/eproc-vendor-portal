@@ -3,9 +3,17 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'VENDOR' | 'BUYER' | 'ADMIN';
+  role: 'ADMIN' | 'USER' | 'BUYER' | 'MANAGER' | 'FINANCE' | 'VENDOR';
   companyId?: string;
   avatar?: string;
+  abilities?: Ability[];
+  tenantId?: string;
+}
+
+export interface Ability {
+  actions: string[];
+  subjects: string[];
+  conditions?: Record<string, any>;
 }
 
 export interface AuthState {
