@@ -52,7 +52,7 @@ export default function LoginPage() {
       console.log('Login response:', result);
       
       // Handle both wrapped and unwrapped responses
-      const responseData = result.data || result;
+      const responseData: any = result.data || result;
       
       if (responseData && (responseData.accessToken || responseData.token)) {
         // Extract token and user from response
@@ -63,7 +63,7 @@ export default function LoginPage() {
         toast.success('Login successful!');
         router.push('/vendor/dashboard');
       } else {
-        toast.error(result.message || 'Login failed');
+        toast.error('Login failed');
       }
     } catch (error: any) {
       console.error('Login error:', error);
