@@ -60,8 +60,14 @@ export function getTenantFromHostname(hostname?: string): string {
 export function getApiUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
   const tenant = getTenantFromHostname();
+  const fullUrl = `${baseUrl}/${tenant}`;
   
-  return `${baseUrl}/${tenant}`;
+  // Debug logging
+  console.log('[API] Base URL:', baseUrl);
+  console.log('[API] Tenant:', tenant);
+  console.log('[API] Full API URL:', fullUrl);
+  
+  return fullUrl;
 }
 
 /**
