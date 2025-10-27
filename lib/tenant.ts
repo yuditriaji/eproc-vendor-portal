@@ -6,8 +6,27 @@
  * - company.synnova.com → "company"
  * - localhost:3001 → "default" (fallback for development)
  * - synnova.com → "default" (main domain without subdomain)
+ * 
+ * TEMPORARY: Also supports ?tenant=xxx query parameter for testing on Vercel
+ * TODO: REMOVE query parameter support after custom domain is configured
  */
 export function getTenantFromHostname(hostname?: string): string {
+  // ========================================
+  // TEMPORARY WORKAROUND FOR TESTING
+  // TODO: REMOVE THIS BLOCK AFTER DOMAIN SETUP
+  // ========================================
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tenantParam = urlParams.get('tenant');
+    if (tenantParam) {
+      console.log('[TEMP] Using tenant from query param:', tenantParam);
+      return tenantParam;
+    }
+  }
+  // ========================================
+  // END TEMPORARY WORKAROUND
+  // ========================================
+  
   // Use provided hostname or get from window if in browser
   const host = hostname || (typeof window !== 'undefined' ? window.location.hostname : '');
   
