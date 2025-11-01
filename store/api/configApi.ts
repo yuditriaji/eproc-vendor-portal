@@ -38,14 +38,6 @@ interface BasisConfigRequest {
 }
 
 // Organization Types
-interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
-
 interface CompanyCodeRequest {
   code: string;
   name: string;
@@ -56,30 +48,23 @@ interface PlantRequest {
   companyCodeId: string;
   code: string;
   name: string;
-  description: string;
-  address: Address;
 }
 
 interface StorageLocationRequest {
   plantId: string;
   code: string;
   name: string;
-  description: string;
-  capacity: number;
-  unit: string;
 }
 
 interface PurchasingOrgRequest {
   code: string;
   name: string;
-  description: string;
 }
 
 interface PurchasingGroupRequest {
   purchasingOrgId: string;
   code: string;
   name: string;
-  description: string;
 }
 
 interface PurchasingOrgAssignmentRequest {
@@ -99,31 +84,32 @@ interface CurrencyRequest {
 
 interface VendorRequest {
   name: string;
-  companyCodeId: string;
-  purchasingOrgId: string;
-  purchasingGroupId: string;
   registrationNumber: string;
   taxId: string;
   contactEmail: string;
   contactPhone: string;
-  website?: string;
-  address: Address;
+  website: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   bankDetails: {
     bankName: string;
     accountNumber: string;
     routingNumber: string;
-    swift: string;
   };
   businessType: string;
   yearEstablished: number;
   employeeCount: number;
   annualRevenue: number;
-  certifications?: string[];
-  insuranceInfo?: {
-    provider: string;
-    policyNumber: string;
-    expiryDate: string;
-  };
+  certifications: string[];
+  companyCodeId: string;
+  plantId: string;
+  purchasingOrgId: string;
+  purchasingGroupId: string;
 }
 
 export const configApi = baseApi.injectEndpoints({

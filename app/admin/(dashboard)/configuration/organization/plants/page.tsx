@@ -15,12 +15,6 @@ interface PlantFormData {
   companyCodeId: string;
   code: string;
   name: string;
-  description: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
 }
 
 export default function PlantsPage() {
@@ -37,14 +31,6 @@ export default function PlantsPage() {
         companyCodeId: formData.companyCodeId,
         code: formData.code,
         name: formData.name,
-        description: formData.description,
-        address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          country: formData.country,
-        },
       };
       
       console.log('Sending plant payload:', JSON.stringify(payload, null, 2));
@@ -104,8 +90,8 @@ export default function PlantsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
                   <Label>Company Code *</Label>
                   <select 
                     className="w-full px-3 py-2 border rounded-md"
@@ -123,7 +109,7 @@ export default function PlantsPage() {
                 <div className="space-y-2">
                   <Label>Plant Code *</Label>
                   <Input 
-                    placeholder="P1001" 
+                    placeholder="P1" 
                     {...register('code', { required: 'Code is required' })}
                   />
                   {errors.code && <p className="text-sm text-destructive">{errors.code.message}</p>}
@@ -131,58 +117,10 @@ export default function PlantsPage() {
                 <div className="space-y-2">
                   <Label>Name *</Label>
                   <Input 
-                    placeholder="Manhattan Manufacturing Plant" 
+                    placeholder="Plant 1" 
                     {...register('name', { required: 'Name is required' })}
                   />
                   {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Description *</Label>
-                  <Input 
-                    placeholder="Primary manufacturing facility" 
-                    {...register('description', { required: 'Description is required' })}
-                  />
-                  {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Street Address *</Label>
-                  <Input 
-                    placeholder="456 Industrial Ave" 
-                    {...register('street', { required: 'Street is required' })}
-                  />
-                  {errors.street && <p className="text-sm text-destructive">{errors.street.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>City *</Label>
-                  <Input 
-                    placeholder="New York" 
-                    {...register('city', { required: 'City is required' })}
-                  />
-                  {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>State *</Label>
-                  <Input 
-                    placeholder="NY" 
-                    {...register('state', { required: 'State is required' })}
-                  />
-                  {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Zip Code *</Label>
-                  <Input 
-                    placeholder="10002" 
-                    {...register('zipCode', { required: 'Zip code is required' })}
-                  />
-                  {errors.zipCode && <p className="text-sm text-destructive">{errors.zipCode.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Country *</Label>
-                  <Input 
-                    placeholder="USA" 
-                    {...register('country', { required: 'Country is required' })}
-                  />
-                  {errors.country && <p className="text-sm text-destructive">{errors.country.message}</p>}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -227,12 +165,6 @@ export default function PlantsPage() {
                         <h3 className="font-semibold">{plant.name}</h3>
                         <Badge>{plant.code}</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {plant.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {plant.address?.city}, {plant.address?.state} {plant.address?.country}
-                      </p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm">Edit</Button>
