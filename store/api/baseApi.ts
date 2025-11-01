@@ -18,10 +18,14 @@ const baseQueryWithLogging = fetchBaseQuery({
 });
 
 const baseQuery: typeof baseQueryWithLogging = async (args, api, extraOptions) => {
+  const state = api.getState() as RootState;
+  const hasToken = !!state.auth.token;
+  
   console.log('[API Request]', {
     endpoint: typeof args === 'string' ? args : args.url,
     method: typeof args === 'string' ? 'GET' : args.method,
     body: typeof args === 'string' ? undefined : args.body,
+    hasAuthToken: hasToken,
   });
   
   const result = await baseQueryWithLogging(args, api, extraOptions);
@@ -31,6 +35,7 @@ const baseQuery: typeof baseQueryWithLogging = async (args, api, extraOptions) =
       status: result.error.status,
       data: result.error.data,
       endpoint: typeof args === 'string' ? args : args.url,
+      fullError: result.error,
     });
   } else {
     console.log('[API Success]', {
