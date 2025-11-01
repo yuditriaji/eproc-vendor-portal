@@ -47,12 +47,16 @@ export default function PlantsPage() {
         },
       };
       
+      console.log('Sending plant payload:', JSON.stringify(payload, null, 2));
+      
       await createPlant(payload).unwrap();
       toast.success('Plant created successfully');
       reset();
       setShowForm(false);
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to create plant');
+      console.error('Error creating plant:', err);
+      const errorMessage = err?.data?.message || err?.data?.errors?.join(', ') || 'Failed to create plant';
+      toast.error(errorMessage);
     }
   };
   

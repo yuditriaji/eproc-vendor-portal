@@ -44,12 +44,16 @@ export default function CompanyCodesPage() {
         },
       };
       
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
+      
       await createCompanyCode(payload).unwrap();
       toast.success('Company code created successfully');
       reset();
       setShowForm(false);
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to create company code');
+      console.error('Error creating company code:', err);
+      const errorMessage = err?.data?.message || err?.data?.errors?.join(', ') || 'Failed to create company code';
+      toast.error(errorMessage);
     }
   };
   
