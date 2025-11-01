@@ -49,8 +49,7 @@ interface Address {
 interface CompanyCodeRequest {
   code: string;
   name: string;
-  description: string;
-  address: Address;
+  description?: string;
 }
 
 interface PlantRequest {

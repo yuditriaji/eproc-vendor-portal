@@ -14,12 +14,7 @@ import { toast } from 'sonner';
 interface CompanyCodeFormData {
   code: string;
   name: string;
-  description: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+  description?: string;
 }
 
 export default function CompanyCodesPage() {
@@ -34,14 +29,7 @@ export default function CompanyCodesPage() {
       const payload = {
         code: formData.code,
         name: formData.name,
-        description: formData.description,
-        address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          country: formData.country,
-        },
+        description: formData.description || '',
       };
       
       console.log('Sending payload:', JSON.stringify(payload, null, 2));
@@ -100,11 +88,11 @@ export default function CompanyCodesPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Code *</Label>
                   <Input 
-                    placeholder="CC1000" 
+                    placeholder="CC1" 
                     {...register('code', { required: 'Code is required' })}
                   />
                   {errors.code && <p className="text-sm text-destructive">{errors.code.message}</p>}
@@ -112,58 +100,17 @@ export default function CompanyCodesPage() {
                 <div className="space-y-2">
                   <Label>Name *</Label>
                   <Input 
-                    placeholder="Acme US Operations" 
+                    placeholder="Company 1" 
                     {...register('name', { required: 'Name is required' })}
                   />
                   {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                 </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Description *</Label>
-                  <Input 
-                    placeholder="Primary company code for US operations" 
-                    {...register('description', { required: 'Description is required' })}
-                  />
-                  {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Street Address *</Label>
-                  <Input 
-                    placeholder="123 Business St" 
-                    {...register('street', { required: 'Street is required' })}
-                  />
-                  {errors.street && <p className="text-sm text-destructive">{errors.street.message}</p>}
-                </div>
                 <div className="space-y-2">
-                  <Label>City *</Label>
+                  <Label>Description (optional)</Label>
                   <Input 
-                    placeholder="New York" 
-                    {...register('city', { required: 'City is required' })}
+                    placeholder="Company description" 
+                    {...register('description')}
                   />
-                  {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>State *</Label>
-                  <Input 
-                    placeholder="NY" 
-                    {...register('state', { required: 'State is required' })}
-                  />
-                  {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Zip Code *</Label>
-                  <Input 
-                    placeholder="10001" 
-                    {...register('zipCode', { required: 'Zip code is required' })}
-                  />
-                  {errors.zipCode && <p className="text-sm text-destructive">{errors.zipCode.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Country *</Label>
-                  <Input 
-                    placeholder="USA" 
-                    {...register('country', { required: 'Country is required' })}
-                  />
-                  {errors.country && <p className="text-sm text-destructive">{errors.country.message}</p>}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -208,12 +155,11 @@ export default function CompanyCodesPage() {
                         <h3 className="font-semibold">{cc.name}</h3>
                         <Badge>{cc.code}</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {cc.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {cc.address?.city}, {cc.address?.state} {cc.address?.country}
-                      </p>
+                      {cc.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {cc.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <Button variant="outline" size="sm">Edit</Button>
