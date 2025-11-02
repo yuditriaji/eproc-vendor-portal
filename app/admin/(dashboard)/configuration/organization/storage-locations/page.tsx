@@ -38,8 +38,8 @@ export default function StorageLocationsPage() {
     }
   };
   
-  const storageLocations = data?.data || [];
-  const plants = plantsData?.data || [];
+  const storageLocations = Array.isArray(data) ? data : (data?.data || []);
+  const plants = Array.isArray(plantsData) ? plantsData : (plantsData?.data || []);
 
   if (isLoading) {
     return (

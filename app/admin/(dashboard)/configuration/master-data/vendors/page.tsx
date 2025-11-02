@@ -98,11 +98,11 @@ export default function VendorsPage() {
     }
   };
   
-  const vendors = data?.data || [];
-  const companyCodes = companyCodesData?.data || [];
-  const plants = plantsData?.data || [];
-  const purchasingOrgs = purchasingOrgsData?.data || [];
-  const purchasingGroups = purchasingGroupsData?.data || [];
+  const vendors = Array.isArray(data) ? data : (data?.data || []);
+  const companyCodes = Array.isArray(companyCodesData) ? companyCodesData : (companyCodesData?.data || []);
+  const plants = Array.isArray(plantsData) ? plantsData : (plantsData?.data || []);
+  const purchasingOrgs = Array.isArray(purchasingOrgsData) ? purchasingOrgsData : (purchasingOrgsData?.data || []);
+  const purchasingGroups = Array.isArray(purchasingGroupsData) ? purchasingGroupsData : (purchasingGroupsData?.data || []);
 
   if (isLoading) {
     return (

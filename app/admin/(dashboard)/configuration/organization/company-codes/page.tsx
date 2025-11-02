@@ -45,7 +45,7 @@ export default function CompanyCodesPage() {
     }
   };
   
-  const companyCodes = data?.data || [];
+  const companyCodes = Array.isArray(data) ? data : (data?.data || []);
 
   if (isLoading) {
     return (

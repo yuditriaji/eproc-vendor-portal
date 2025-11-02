@@ -38,8 +38,8 @@ export default function PurchasingGroupsPage() {
     }
   };
   
-  const purchasingGroups = data?.data || [];
-  const purchasingOrgs = purchasingOrgsData?.data || [];
+  const purchasingGroups = Array.isArray(data) ? data : (data?.data || []);
+  const purchasingOrgs = Array.isArray(purchasingOrgsData) ? purchasingOrgsData : (purchasingOrgsData?.data || []);
 
   if (isLoading) {
     return (

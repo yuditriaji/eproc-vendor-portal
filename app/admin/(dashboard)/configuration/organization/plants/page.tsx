@@ -46,8 +46,8 @@ export default function PlantsPage() {
     }
   };
   
-  const plants = data?.data || [];
-  const companyCodes = companyCodesData?.data || [];
+  const plants = Array.isArray(data) ? data : (data?.data || []);
+  const companyCodes = Array.isArray(companyCodesData) ? companyCodesData : (companyCodesData?.data || []);
 
   if (isLoading) {
     return (

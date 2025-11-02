@@ -48,7 +48,7 @@ export default function CurrenciesPage() {
     }
   };
   
-  const currencies = data?.data || [];
+  const currencies = Array.isArray(data) ? data : (data?.data || []);
 
   if (isLoading) {
     return (

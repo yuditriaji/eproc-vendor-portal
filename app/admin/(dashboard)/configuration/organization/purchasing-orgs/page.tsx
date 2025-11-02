@@ -36,7 +36,7 @@ export default function PurchasingOrgsPage() {
     }
   };
   
-  const purchasingOrgs = data?.data || [];
+  const purchasingOrgs = Array.isArray(data) ? data : (data?.data || []);
 
   if (isLoading) {
     return (
