@@ -50,11 +50,25 @@ export default function UsersManagementPage() {
   
   // Extract users array from response
   let users: any[] = [];
-  if (Array.isArray(data)) {
-    users = data;
-  } else if (data?.data && Array.isArray(data.data)) {
-    users = data.data;
+  const responseData: any = data;
+  
+  if (Array.isArray(responseData)) {
+    users = responseData;
+  } else if (responseData?.users && Array.isArray(responseData.users)) {
+    // Handle response with users property at root level
+    users = responseData.users;
+  } else if (responseData?.data?.users && Array.isArray(responseData.data.users)) {
+    // Handle response with nested data.users
+    users = responseData.data.users;
+  } else if (responseData?.data && Array.isArray(responseData.data)) {
+    // Handle response with data as array
+    users = responseData.data;
   }
+  
+  // Debug logging
+  console.log('[Users Debug] Raw data:', responseData);
+  console.log('[Users Debug] Extracted users:', users);
+  console.log('[Users Debug] Users count:', users.length);
   
   // Filter users based on search
   const filteredUsers = users.filter((user) =>
