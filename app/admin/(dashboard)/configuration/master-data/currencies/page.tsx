@@ -69,7 +69,15 @@ export default function CurrenciesPage() {
     );
   }
   
-  const currencies = Array.isArray(data) ? data : (data?.data || []);
+  // Extract currencies array from response
+  let currencies: any[] = [];
+  if (Array.isArray(data)) {
+    currencies = data;
+  } else if (data?.data && Array.isArray(data.data)) {
+    currencies = data.data;
+  } else if (data) {
+    console.log('[Currencies Debug] Unexpected data structure:', data);
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -173,9 +181,9 @@ export default function CurrenciesPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{currency.name}</h3>
-                        <Badge>{currency.code}</Badge>
-                        <span className="text-lg">{currency.symbol}</span>
+                        <h3 className="font-semibold">{String(currency.name || '')}</h3>
+                        <Badge>{String(currency.code || '')}</Badge>
+                        <span className="text-lg">{String(currency.symbol || '')}</span>
                         {currency.isActive ? (
                           <Badge variant="secondary">Active</Badge>
                         ) : (
@@ -183,7 +191,7 @@ export default function CurrenciesPage() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Exchange Rate: {currency.exchangeRate}
+                        Exchange Rate: {String(currency.exchangeRate || '')}
                       </p>
                     </div>
                   </div>
