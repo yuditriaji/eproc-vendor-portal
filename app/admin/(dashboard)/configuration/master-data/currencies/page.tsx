@@ -47,8 +47,6 @@ export default function CurrenciesPage() {
       toast.error(errorMessage);
     }
   };
-  
-  const currencies = Array.isArray(data) ? data : (data?.data || []);
 
   if (isLoading) {
     return (
@@ -70,6 +68,8 @@ export default function CurrenciesPage() {
       </div>
     );
   }
+  
+  const currencies = Array.isArray(data) ? data : (data?.data || []);
 
   return (
     <div className="p-6 space-y-6">
@@ -156,7 +156,7 @@ export default function CurrenciesPage() {
       )}
 
       <div className="space-y-4">
-        {currencies.length === 0 ? (
+        {!Array.isArray(currencies) || currencies.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
               No currencies configured yet. Create your first currency to get started.
