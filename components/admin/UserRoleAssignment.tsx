@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, X, Calendar } from 'lucide-react';
-import { useGetRolesQuery, useGetUserRolesQuery, useAssignRolesToUserMutation, useRemoveRoleFromUserMutation } from '@/store/api/roleApi';
+import { useGetRbacRolesQuery, useGetUserRbacRolesQuery, useAssignRbacRolesToUserMutation, useRemoveRbacRoleFromUserMutation } from '@/store/api/rbacApi';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -24,17 +24,17 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
   const [expirationDate, setExpirationDate] = useState<string>('');
   const [useExpiration, setUseExpiration] = useState(false);
 
-  const { data: rolesData } = useGetRolesQuery();
-  const { data: userRolesData, refetch } = useGetUserRolesQuery(userId);
-  const [assignRoles, { isLoading: isAssigning }] = useAssignRolesToUserMutation();
-  const [removeRole, { isLoading: isRemoving }] = useRemoveRoleFromUserMutation();
+  const { data: rolesData } = useGetRbacRolesQuery();
+  const { data: userRolesData, refetch } = useGetUserRbacRolesQuery(userId);
+  const [assignRoles, { isLoading: isAssigning }] = useAssignRbacRolesToUserMutation();
+  const [removeRole, { isLoading: isRemoving }] = useRemoveRbacRoleFromUserMutation();
 
   // Extract roles arrays
   const allRoles = Array.isArray(rolesData) ? rolesData : (rolesData?.data || []);
   const userRoles = userRolesData?.roles || [];
 
   // Get available roles (not yet assigned)
-  const assignedRoleIds = new Set(userRoles.map(ur => ur.roleId));
+  const assignedRoleIds = new Set(userRoles.map(ur => ur.rbacRoleId));
   const availableRoles = allRoles.filter(role => !assignedRoleIds.has(role.id) && role.isActive);
 
   const handleAssign = async () => {
@@ -130,13 +130,13 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="secondary">{userRole.roleConfig.roleName}</Badge>
-                            {!userRole.roleConfig.isActive && (
+                            <Badge variant="secondary">{userRole.rbacRole.roleName}</Badge>
+                            {!userRole.rbacRole.isActive && (
                               <Badge variant="outline">Inactive</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {userRole.roleConfig.description}
+                            {userRole.rbacRole.description}
                           </p>
                           <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                             <span>Assigned: {formatDate(userRole.assignedAt)}</span>
@@ -146,7 +146,7 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemove(userRole.roleId, userRole.roleConfig.roleName)}
+                          onClick={() => handleRemove(userRole.rbacRoleId, userRole.rbacRole.roleName)}
                           disabled={isRemoving}
                         >
                           <X className="h-4 w-4" />

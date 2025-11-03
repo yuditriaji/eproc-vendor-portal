@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
-import { useCreateRoleMutation, useUpdateRoleMutation, type Role } from '@/store/api/roleApi';
+import { useCreateRbacRoleMutation, useUpdateRbacRoleMutation } from '@/store/api/rbacApi';
+import type { RbacConfig } from '@/types/rbac';
 import { toast } from 'sonner';
 
 interface RoleFormModalProps {
-  role?: Role | null;
+  role?: RbacConfig | null;
   open: boolean;
   onClose: () => void;
 }
@@ -23,8 +24,8 @@ export default function RoleFormModal({ role, open, onClose }: RoleFormModalProp
   const [permissionsJson, setPermissionsJson] = useState('');
   const [isActive, setIsActive] = useState(true);
 
-  const [createRole, { isLoading: isCreating }] = useCreateRoleMutation();
-  const [updateRole, { isLoading: isUpdating }] = useUpdateRoleMutation();
+  const [createRole, { isLoading: isCreating }] = useCreateRbacRoleMutation();
+  const [updateRole, { isLoading: isUpdating }] = useUpdateRbacRoleMutation();
 
   const isEditing = !!role;
   const isLoading = isCreating || isUpdating;
@@ -32,7 +33,7 @@ export default function RoleFormModal({ role, open, onClose }: RoleFormModalProp
   useEffect(() => {
     if (role) {
       setRoleName(role.roleName);
-      setDescription(role.description);
+      setDescription(role.description || '');
       setPermissionsJson(JSON.stringify(role.permissions, null, 2));
       setIsActive(role.isActive);
     } else {

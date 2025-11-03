@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Plus, Search, Loader2, AlertCircle, Users, Edit, Trash2 } from 'lucide-react';
-import { useGetRolesQuery, useDeleteRoleMutation, type Role } from '@/store/api/roleApi';
+import { useGetRbacRolesQuery, useDeleteRbacRoleMutation } from '@/store/api/rbacApi';
+import type { RbacConfig } from '@/types/rbac';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RoleFormModal from '@/components/admin/RoleFormModal';
@@ -14,14 +15,14 @@ import RoleFormModal from '@/components/admin/RoleFormModal';
 export default function RolesPermissionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [deletingRole, setDeletingRole] = useState<Role | null>(null);
+  const [editingRole, setEditingRole] = useState<RbacConfig | null>(null);
+  const [deletingRole, setDeletingRole] = useState<RbacConfig | null>(null);
 
-  const { data, isLoading, error } = useGetRolesQuery();
-  const [deleteRole, { isLoading: isDeleting }] = useDeleteRoleMutation();
+  const { data, isLoading, error } = useGetRbacRolesQuery();
+  const [deleteRole, { isLoading: isDeleting }] = useDeleteRbacRoleMutation();
 
   // Extract roles array from response
-  let roles: Role[] = [];
+  let roles: RbacConfig[] = [];
   const responseData: any = data;
   if (Array.isArray(responseData)) {
     roles = responseData;
@@ -136,7 +137,7 @@ export default function RolesPermissionsPage() {
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           <span>
-                            {role._count?.userRoles || role.userRoles?.length || 0} users
+                            {role._count?.userRoles || 0} users
                           </span>
                         </div>
                         <div>

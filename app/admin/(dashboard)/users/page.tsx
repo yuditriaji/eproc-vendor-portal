@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Search, Loader2, AlertCircle, Shield } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetUsersQuery, useCreateUserMutation } from '@/store/api/userApi';
-import { useGetUserRolesQuery } from '@/store/api/roleApi';
+import { useGetUserRbacRolesQuery } from '@/store/api/rbacApi';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import UserRoleAssignment from '@/components/admin/UserRoleAssignment';
@@ -26,7 +26,7 @@ interface UserFormData {
 
 // Helper component to display user roles
 function UserRolesBadges({ userId }: { userId: string }) {
-  const { data: userRolesData } = useGetUserRolesQuery(userId);
+  const { data: userRolesData } = useGetUserRbacRolesQuery(userId);
   const userRoles = userRolesData?.roles || [];
 
   if (userRoles.length === 0) {
@@ -40,7 +40,7 @@ function UserRolesBadges({ userId }: { userId: string }) {
       <span className="text-xs text-muted-foreground">Roles:</span>
       {userRoles.slice(0, 3).map((userRole) => (
         <Badge key={userRole.id} variant="outline" className="text-xs">
-          {userRole.roleConfig.roleName}
+          {userRole.rbacRole.roleName}
         </Badge>
       ))}
       {userRoles.length > 3 && (
