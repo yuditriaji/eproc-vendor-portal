@@ -2,6 +2,10 @@
 
 ## Overview
 
+**Backend Status**: ✅ Fully implemented (see RBAC_IMPLEMENTATION_PLAN.md and USER_MANAGEMENT.md)
+
+**Goal**: Build the frontend UI to integrate with the existing backend RBAC endpoints.
+
 Implement a complete Role-Based Access Control (RBAC) user interface in the admin portal that allows administrators to:
 - Create and manage role configurations with custom permissions
 - Assign multiple roles to users (supporting ADMIN + USER dual roles, etc.)
@@ -9,15 +13,44 @@ Implement a complete Role-Based Access Control (RBAC) user interface in the admi
 - Handle temporary role assignments with expiration dates
 - Support the multi-role system described in RBAC_IMPLEMENTATION_PLAN.md
 
+**Backend Endpoints Available** (from USER_MANAGEMENT.md):
+- ✅ `POST /:tenant/roles` - Create role
+- ✅ `GET /:tenant/roles` - List all roles
+- ✅ `GET /:tenant/roles/:roleId` - Get role details
+- ✅ `PATCH /:tenant/roles/:roleId` - Update role
+- ✅ `DELETE /:tenant/roles/:roleId` - Delete role
+- ✅ `POST /:tenant/users/:userId/roles` - Assign roles to user
+- ✅ `GET /:tenant/users/:userId/roles` - Get user's roles
+- ✅ `GET /:tenant/users/:userId/roles/permissions` - Get effective permissions
+- ✅ `DELETE /:tenant/users/:userId/roles/:roleId` - Remove role from user
+
+---
+
+## Quick Start - What to Build
+
+### Immediate Actions (MVP):
+1. **Create `store/api/roleApi.ts`** - Frontend API client for backend endpoints
+2. **Build Roles Page** (`app/admin/(dashboard)/roles/page.tsx`) - List and manage roles
+3. **Add Role Assignment to Users Page** - Multi-select dropdown to assign roles
+4. **Create Role Form Component** - Create/edit roles with permission editor
+
+### What You Get:
+- Admins can create custom roles (e.g., PROCUREMENT_MANAGER, FINANCE_MANAGER)
+- Admins can assign multiple roles to users (e.g., Bob gets ADMIN + USER roles)
+- Users get merged permissions from all their roles
+- Support for temporary roles with expiration dates
+
 ---
 
 ## Implementation Phases
 
-### Phase 1: API Integration Layer (2-3 days)
+### Phase 1: Frontend API Client Integration (2-3 days)
 
-#### 1.1 Create Role Management API (`store/api/roleApi.ts`)
+#### 1.1 Create Role Management API Client (`store/api/roleApi.ts`)
 
-**Endpoints to implement:**
+**Task**: Create RTK Query API client to connect to existing backend endpoints.
+
+**Backend endpoints to integrate** (already implemented):
 
 ```typescript
 // Role Configuration CRUD
@@ -463,6 +496,8 @@ toast.success('Roles assigned successfully');
 ---
 
 ## Implementation Timeline
+
+**Note**: Backend RBAC system is fully implemented. This timeline covers FRONTEND UI development only.
 
 | Phase | Task | Duration | Dependencies |
 |-------|------|----------|--------------|
