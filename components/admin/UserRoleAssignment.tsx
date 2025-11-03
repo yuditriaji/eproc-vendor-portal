@@ -43,12 +43,22 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
       return;
     }
 
-    const payload = {
+    // Build payload with optional expiration
+    const payload: { roleIds: string[]; expiresAt?: string } = {
       roleIds: [selectedRoleId],
-      ...(useExpiration && expirationDate && { expiresAt: new Date(expirationDate).toISOString() }),
     };
 
-    console.log('[Role Assignment] Payload:', payload);
+    // Add expiration date if specified
+    if (useExpiration && expirationDate) {
+      // Parse the date and set it to end of day (23:59:59) in local timezone
+      const expiryDate = new Date(expirationDate);
+      expiryDate.setHours(23, 59, 59, 999);
+      payload.expiresAt = expiryDate.toISOString();
+      console.log('[Role Assignment] Expiration date:', expirationDate, '-> ISO:', payload.expiresAt);
+    }
+
+    console.log('[Role Assignment] Final Payload:', JSON.stringify(payload, null, 2));
+    console.log('[Role Assignment] User ID:', userId);
 
     try {
       await assignRoles({
