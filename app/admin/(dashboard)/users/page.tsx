@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Search, Loader2, AlertCircle } from 'lucide-react';
+import { Users, Plus, Search, Loader2, AlertCircle, Shield } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetUsersQuery, useCreateUserMutation } from '@/store/api/userApi';
+import { useGetUserRolesQuery } from '@/store/api/roleApi';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
+import UserRoleAssignment from '@/components/admin/UserRoleAssignment';
 
 interface UserFormData {
   email: string;
@@ -22,9 +24,39 @@ interface UserFormData {
   role: string;
 }
 
+// Helper component to display user roles
+function UserRolesBadges({ userId }: { userId: string }) {
+  const { data: userRolesData } = useGetUserRolesQuery(userId);
+  const userRoles = userRolesData?.roles || [];
+
+  if (userRoles.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">No additional roles assigned</p>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      <span className="text-xs text-muted-foreground">Roles:</span>
+      {userRoles.slice(0, 3).map((userRole) => (
+        <Badge key={userRole.id} variant="outline" className="text-xs">
+          {userRole.roleConfig.roleName}
+        </Badge>
+      ))}
+      {userRoles.length > 3 && (
+        <Badge variant="outline" className="text-xs">
+          +{userRoles.length - 3}
+        </Badge>
+      )}
+    </div>
+  );
+}
+
 export default function UsersManagementPage() {
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingUserName, setEditingUserName] = useState<string>('');
   
   const { data, isLoading, error } = useGetUsersQuery();
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
@@ -265,22 +297,49 @@ export default function UsersManagementPage() {
                         {user.isActive && <Badge variant="secondary">Active</Badge>}
                         {!user.isVerified && <Badge variant="outline">Unverified</Badge>}
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mb-2">
                         {String(user.email || '')} • @{String(user.username || '')}
                       </p>
+                      <UserRolesBadges userId={user.id} />
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/users/${user.id}`}>
-                      Edit
-                    </Link>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setEditingUserId(user.id);
+                        setEditingUserName(`${user.firstName} ${user.lastName}`);
+                      }}
+                    >
+                      <Shield className="h-4 w-4 mr-1" />
+                      Edit Roles
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/users/${user.id}`}>
+                        Edit
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+
+      {/* Role Assignment Modal */}
+      {editingUserId && (
+        <UserRoleAssignment
+          userId={editingUserId}
+          userName={editingUserName}
+          open={!!editingUserId}
+          onClose={() => {
+            setEditingUserId(null);
+            setEditingUserName('');
+          }}
+        />
+      )}
     </div>
   );
 }
