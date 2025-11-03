@@ -43,13 +43,17 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
       return;
     }
 
+    const payload = {
+      roleIds: [selectedRoleId],
+      ...(useExpiration && expirationDate && { expiresAt: new Date(expirationDate).toISOString() }),
+    };
+
+    console.log('[Role Assignment] Payload:', payload);
+
     try {
       await assignRoles({
         userId,
-        data: {
-          roleIds: [selectedRoleId],
-          expiresAt: useExpiration && expirationDate ? new Date(expirationDate).toISOString() : undefined,
-        },
+        data: payload,
       }).unwrap();
       
       toast.success('Role assigned successfully');
@@ -58,8 +62,18 @@ export default function UserRoleAssignment({ userId, userName, open, onClose }: 
       setUseExpiration(false);
       refetch();
     } catch (err: any) {
-      console.error('Error assigning role:', err);
-      const errorMessage = err?.data?.message || 'Failed to assign role';
+      console.error('[Role Assignment] Error:', err);
+      console.error('[Role Assignment] Error data:', err?.data);
+      
+      let errorMessage = 'Failed to assign role';
+      if (err?.data?.message) {
+        errorMessage = err.data.message;
+      } else if (err?.data?.errors && Array.isArray(err.data.errors)) {
+        errorMessage = err.data.errors.join(', ');
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
       toast.error(errorMessage);
     }
   };
