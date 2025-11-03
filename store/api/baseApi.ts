@@ -63,7 +63,9 @@ export const baseApi = createApi({
     'PurchasingOrgs',
     'PurchasingGroups',
     'Currencies',
-    'Vendors'
+    'Vendors',
+    'Roles',
+    'UserRoles'
   ],
   endpoints: () => ({}),
 });
