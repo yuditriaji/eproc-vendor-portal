@@ -14,6 +14,23 @@ import { useLoginMutation } from '@/store/api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/slices/authSlice';
 import { isAdmin } from '@/utils/permissions';
+import type { User } from '@/types';
+
+/**
+ * Decode JWT token payload
+ */
+function decodeToken(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const decoded = JSON.parse(atob(parts[1]));
+    return decoded;
+  } catch (error) {
+    console.error('Failed to decode token:', error);
+    return null;
+  }
+}
 
 const loginSchema = yup.object({
   email: yup
@@ -59,10 +76,25 @@ function AdminLoginForm() {
       
       if (responseData && (responseData.accessToken || responseData.token)) {
         const token = responseData.accessToken || responseData.token;
-        const user = responseData.user;
+        let user = responseData.user as User;
+        
+        // Extract rbacRoles from JWT token if not in response
+        if (!user?.rbacRoles) {
+          const decodedToken = decodeToken(token);
+          if (decodedToken?.rbacRoles) {
+            user = {
+              ...user,
+              rbacRoles: decodedToken.rbacRoles,
+            };
+            console.log('[DEBUG] Extracted rbacRoles from token:', decodedToken.rbacRoles);
+          }
+        }
+        
+        console.log('[DEBUG] User object:', { role: user?.role, rbacRoles: user?.rbacRoles });
         
         // Verify admin role (enum ADMIN or RBAC Admin)
         if (!isAdmin(user)) {
+          console.log('[DEBUG] Access denied - not admin. Role:', user?.role, 'RBAC:', user?.rbacRoles);
           toast.error('Access denied. Admin credentials required.');
           return;
         }
