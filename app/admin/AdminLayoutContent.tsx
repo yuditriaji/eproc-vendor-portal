@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
+import { isAdmin } from '@/utils/permissions';
 import { 
   LayoutDashboard,
   Building2,
@@ -166,14 +167,15 @@ export default function AdminLayoutContent({ children }: { children: React.React
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   
   useEffect(() => {
-    // Check if user is authenticated and has ADMIN role
+    // Check if user is authenticated and has ADMIN role (enum or RBAC)
     if (!isAuthenticated) {
       const tenant = searchParams.get('tenant') || 'default';
       router.replace(`/admin/login?tenant=${tenant}`);
       return;
     }
     
-    if (user?.role !== 'ADMIN') {
+    // Check both enum and RBAC roles
+    if (!isAdmin(user)) {
       router.replace('/unauthorized');
       return;
     }
@@ -181,7 +183,7 @@ export default function AdminLayoutContent({ children }: { children: React.React
     setIsLoading(false);
   }, [isAuthenticated, user, router, searchParams]);
   
-  if (isLoading || !isAuthenticated || user?.role !== 'ADMIN') {
+  if (isLoading || !isAuthenticated || !isAdmin(user)) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

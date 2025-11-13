@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useLoginMutation } from '@/store/api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/slices/authSlice';
+import { isAdmin } from '@/utils/permissions';
 
 const loginSchema = yup.object({
   email: yup
@@ -60,8 +61,8 @@ function AdminLoginForm() {
         const token = responseData.accessToken || responseData.token;
         const user = responseData.user;
         
-        // Verify admin role
-        if (user?.role !== 'ADMIN') {
+        // Verify admin role (enum ADMIN or RBAC Admin)
+        if (!isAdmin(user)) {
           toast.error('Access denied. Admin credentials required.');
           return;
         }

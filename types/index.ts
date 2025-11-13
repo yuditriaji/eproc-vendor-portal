@@ -4,6 +4,7 @@ export interface User {
   email: string;
   name: string;
   role: 'ADMIN' | 'USER' | 'BUYER' | 'MANAGER' | 'FINANCE' | 'VENDOR';
+  rbacRoles?: string[];  // RBAC-based roles (e.g., ['Admin', 'PROCUREMENT_MANAGER'])
   companyId?: string;
   avatar?: string;
   abilities?: Ability[];
