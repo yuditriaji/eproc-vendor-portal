@@ -227,12 +227,18 @@ function PurchasingOrgAssignments() {
   const [deletingDetails, setDeletingDetails] = useState<any>(null);
 
   const { user } = useAppSelector((state) => state.auth);
-  const { data: assignments, isLoading } = useGetPurchasingOrgAssignmentsQuery(
+  const { data: assignments, isLoading, error: assignmentsError } = useGetPurchasingOrgAssignmentsQuery(
     filterPorgId || undefined
   );
-  const { data: purchasingOrgs } = useGetPurchasingOrgsQuery();
-  const { data: companyCodes } = useGetCompanyCodesQuery();
-  const { data: plants } = useGetPlantsQuery();
+  const { data: purchasingOrgs, error: porgsError } = useGetPurchasingOrgsQuery();
+  const { data: companyCodes, error: ccError } = useGetCompanyCodesQuery();
+  const { data: plants, error: plantsError } = useGetPlantsQuery();
+
+  // Log any errors for debugging
+  if (assignmentsError) console.error('[Assignments Error]', assignmentsError);
+  if (porgsError) console.error('[POrgs Error]', porgsError);
+  if (ccError) console.error('[CompanyCodes Error]', ccError);
+  if (plantsError) console.error('[Plants Error]', plantsError);
 
   const [createAssignment, { isLoading: isCreating }] =
     useAssignPurchasingOrgMutation();
@@ -370,6 +376,16 @@ function PurchasingOrgAssignments() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Error State */}
+      {(assignmentsError || porgsError || ccError || plantsError) && (
+        <Card className="border-destructive">
+          <CardContent className="p-6 flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            <span>Error loading data. Please refresh the page or try again.</span>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Assignments Table/List */}
       {isLoading ? (
