@@ -291,13 +291,27 @@ export const configApi = baseApi.injectEndpoints({
     }),
 
     // Purchasing Org Assignments
+    getPurchasingOrgAssignments: builder.query<ApiResponse<any[]>, string | void>({
+      query: (purchasingOrgId) => 
+        purchasingOrgId ? `org/porg-assignments?purchasingOrgId=${purchasingOrgId}` : 'org/porg-assignments',
+      providesTags: ['PurchasingOrgAssignments'],
+    }),
+
     assignPurchasingOrg: builder.mutation<ApiResponse<any>, PurchasingOrgAssignmentRequest>({
       query: (data) => ({
         url: 'org/porg-assignments',
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['PurchasingOrgs', 'CompanyCodes'],
+      invalidatesTags: ['PurchasingOrgAssignments', 'PurchasingOrgs', 'CompanyCodes'],
+    }),
+
+    deletePurchasingOrgAssignment: builder.mutation<ApiResponse<null>, string>({
+      query: (id) => ({
+        url: `org/porg-assignments/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['PurchasingOrgAssignments'],
     }),
 
     // Currencies
@@ -422,7 +436,9 @@ export const {
   useDeletePurchasingGroupMutation,
 
   // Assignments
+  useGetPurchasingOrgAssignmentsQuery,
   useAssignPurchasingOrgMutation,
+  useDeletePurchasingOrgAssignmentMutation,
 
   // Currencies
   useCreateCurrencyMutation,

@@ -61,6 +61,7 @@ export const baseApi = createApi({
     'Plants',
     'StorageLocations',
     'PurchasingOrgs',
+    'PurchasingOrgAssignments',
     'PurchasingGroups',
     'Currencies',
     'Vendors',
