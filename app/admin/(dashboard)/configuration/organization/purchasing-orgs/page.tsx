@@ -486,7 +486,7 @@ function PurchasingOrgAssignments() {
                 control={control}
                 rules={{ required: 'Purchasing organization is required' }}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select purchasing org..." />
                     </SelectTrigger>
@@ -554,7 +554,7 @@ function PurchasingOrgAssignments() {
                         : true,
                   }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select company code..." />
                       </SelectTrigger>
@@ -592,7 +592,7 @@ function PurchasingOrgAssignments() {
                         : true,
                   }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select plant..." />
                       </SelectTrigger>
