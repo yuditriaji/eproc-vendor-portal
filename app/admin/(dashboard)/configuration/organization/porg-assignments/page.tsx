@@ -48,7 +48,7 @@ interface AssignmentFormData {
   plantId?: string;
 }
 
-export default function PorgAssignmentsPage() {
+function PorgAssignmentsContent() {
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPorgId, setFilterPorgId] = useState<string>('');
@@ -543,4 +543,25 @@ export default function PorgAssignmentsPage() {
       </div>
     </div>
   );
+}
+
+export default function PorgAssignmentsPage() {
+  try {
+    return <PorgAssignmentsContent />;
+  } catch (error) {
+    console.error('Page render error:', error);
+    return (
+      <div className="p-6">
+        <Card className="border-destructive">
+          <CardContent className="p-6 flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            <div className="flex-1">
+              <p className="font-semibold mb-1">An error occurred</p>
+              <p className="text-sm">Please try refreshing the page</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 }
