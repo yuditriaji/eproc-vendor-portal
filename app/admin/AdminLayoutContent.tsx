@@ -69,6 +69,11 @@ const navigation: NavItem[] = [
             icon: Building2,
           },
           {
+            title: 'Purchasing Org Assignments',
+            href: '/admin/configuration/organization/porg-assignments',
+            icon: Network,
+          },
+          {
             title: 'Purchasing Groups',
             href: '/admin/configuration/organization/purchasing-groups',
             icon: Users,
