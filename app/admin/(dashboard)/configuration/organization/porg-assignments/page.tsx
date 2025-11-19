@@ -54,14 +54,31 @@ function PorgAssignmentsContent() {
   const [filterPorgId, setFilterPorgId] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingDetails, setDeletingDetails] = useState<any>(null);
+  const [isReady, setIsReady] = useState(false);
 
+  // Only fetch user after component mounts (avoid hydration mismatch)
   const { user } = useAppSelector((state) => state.auth);
+  
+  // Defer queries until component is ready
   const { data: assignments, isLoading, error: assignmentsError } =
-    useGetPurchasingOrgAssignmentsQuery(filterPorgId || undefined);
+    useGetPurchasingOrgAssignmentsQuery(isReady ? (filterPorgId || undefined) : undefined, {
+      skip: !isReady,
+    });
   const { data: purchasingOrgs, error: porgsError } =
-    useGetPurchasingOrgsQuery();
-  const { data: companyCodes, error: ccError } = useGetCompanyCodesQuery();
-  const { data: plants, error: plantsError } = useGetPlantsQuery();
+    useGetPurchasingOrgsQuery(undefined, {
+      skip: !isReady,
+    });
+  const { data: companyCodes, error: ccError } = useGetCompanyCodesQuery(undefined, {
+    skip: !isReady,
+  });
+  const { data: plants, error: plantsError } = useGetPlantsQuery(undefined, {
+    skip: !isReady,
+  });
+
+  // Set ready flag after mount to avoid hydration issues
+  if (!isReady && typeof window !== 'undefined') {
+    setIsReady(true);
+  }
 
   // Log any errors for debugging
   if (assignmentsError) console.error('[Assignments Error]', assignmentsError);
