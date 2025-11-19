@@ -61,9 +61,12 @@ function PorgAssignmentsContent() {
   
   // Defer queries until component is ready
   const { data: assignments, isLoading, error: assignmentsError } =
-    useGetPurchasingOrgAssignmentsQuery(isReady ? (filterPorgId || undefined) : undefined, {
-      skip: !isReady,
-    });
+    useGetPurchasingOrgAssignmentsQuery(
+      isReady ? (filterPorgId && filterPorgId !== 'all' ? filterPorgId : undefined) : undefined,
+      {
+        skip: !isReady,
+      }
+    );
   const { data: purchasingOrgs, error: porgsError } =
     useGetPurchasingOrgsQuery(undefined, {
       skip: !isReady,
@@ -235,7 +238,11 @@ function PorgAssignmentsContent() {
             <SelectValue placeholder="Filter by Org..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Orgs</SelectItem>
+            {porgList.length > 0 && (
+              <SelectItem key="all" value="all">
+                All Orgs
+              </SelectItem>
+            )}
             {porgList.map((org: any) => (
               <SelectItem key={org.id} value={org.id}>
                 {org.code} - {org.name}
