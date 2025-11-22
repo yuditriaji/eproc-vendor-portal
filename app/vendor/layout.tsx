@@ -7,6 +7,7 @@ import type { RootState } from '@/store/store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopNavbar } from '@/components/layout/top-navbar';
 import { cn } from '@/lib/utils';
+import { isVendor } from '@/utils/permissions';
 
 export default function VendorLayout({
   children,
@@ -18,6 +19,7 @@ export default function VendorLayout({
   const pathname = usePathname();
   const router = useRouter();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   // Don't apply layout to auth pages
   const isAuthPage = pathname?.startsWith('/vendor/login') || 
@@ -25,11 +27,18 @@ export default function VendorLayout({
                      pathname?.startsWith('/vendor/forgot-password');
 
   // Redirect to login if not authenticated and not on auth page
+  // Also check if user has vendor role
   useEffect(() => {
     if (!isAuthenticated && !isAuthPage) {
       router.push('/vendor/login');
+      return;
     }
-  }, [isAuthenticated, isAuthPage, router]);
+    
+    // Check if authenticated user is actually a vendor
+    if (isAuthenticated && !isAuthPage && !isVendor(user)) {
+      router.push('/unauthorized');
+    }
+  }, [isAuthenticated, isAuthPage, user, router]);
 
   // If auth page, render children without layout
   if (isAuthPage) {

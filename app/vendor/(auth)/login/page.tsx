@@ -88,6 +88,13 @@ export default function LoginPage() {
           }
         }
         
+        // Verify vendor role (enum VENDOR or RBAC Vendor)
+        if (user.role !== 'VENDOR' && !user.rbacRoles?.includes('Vendor')) {
+          console.log('[DEBUG] Access denied - not vendor. Role:', user?.role, 'RBAC:', user?.rbacRoles);
+          toast.error('Access denied. Vendor credentials required.');
+          return;
+        }
+        
         dispatch(setCredentials({ token, user }));
         toast.success('Login successful!');
         router.push('/vendor/dashboard');

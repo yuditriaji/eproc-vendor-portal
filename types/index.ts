@@ -199,6 +199,154 @@ export interface PaginatedResponse<T> {
   totalPages?: number;
 }
 
+// Quotation types
+export type QuotationStatus = 'DRAFT' | 'SUBMITTED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+
+export interface QuotationItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  specifications?: string;
+}
+
+export interface Quotation {
+  id: string;
+  rfqId?: string;
+  rfqTitle?: string;
+  tenderId?: string;
+  tenderTitle?: string;
+  vendorId: string;
+  items: QuotationItem[];
+  totalAmount: number;
+  currency: string;
+  validUntil: string;
+  status: QuotationStatus;
+  submittedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Payment types
+export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  invoiceNumber?: string;
+  contractId?: string;
+  contractNumber?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentDate?: string;
+  paymentMethod?: string;
+  transactionId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Performance types
+export interface PerformanceMetrics {
+  overallScore: number;
+  bidWinRate: number;
+  contractCompletionRate: number;
+  onTimeDeliveryRate: number;
+  qualityRating: number;
+  totalContracts: number;
+  activeContracts: number;
+  completedContracts: number;
+  totalBidsSubmitted: number;
+  bidsWon: number;
+  averageResponseTime?: number; // in hours
+  customerSatisfaction?: number;
+}
+
+export interface PerformanceHistory {
+  period: string;
+  score: number;
+  bidsSubmitted: number;
+  bidsWon: number;
+  contractsCompleted: number;
+}
+
+// Compliance types
+export type ComplianceStatus = 'VERIFIED' | 'PENDING' | 'EXPIRED' | 'REJECTED';
+export type ComplianceDocumentType = 
+  | 'BUSINESS_LICENSE' 
+  | 'TAX_CERTIFICATE' 
+  | 'INSURANCE' 
+  | 'ISO_CERTIFICATION' 
+  | 'SAFETY_CERTIFICATE'
+  | 'OTHER';
+
+export interface ComplianceDocument {
+  id: string;
+  type: ComplianceDocumentType;
+  name: string;
+  description?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  status: ComplianceStatus;
+  uploadedAt: string;
+  expiryDate?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  rejectionReason?: string;
+  documentNumber?: string;
+}
+
+// Support types
+export type SupportTicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type SupportTicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type SupportTicketCategory = 'TECHNICAL' | 'BILLING' | 'GENERAL' | 'FEATURE_REQUEST' | 'BUG_REPORT';
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  category: SupportTicketCategory;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  createdAt: string;
+  updatedAt: string;
+  assignedTo?: string;
+  assignedToName?: string;
+  resolvedAt?: string;
+  closedAt?: string;
+  attachments?: SupportAttachment[];
+  messages?: SupportMessage[];
+}
+
+export interface SupportAttachment {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticketId: string;
+  message: string;
+  createdAt: string;
+  createdBy: string;
+  createdByName: string;
+  isStaff: boolean;
+}
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  order: number;
+}
+
 // Form types
 export interface FormState {
   isSubmitting: boolean;
