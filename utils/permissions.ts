@@ -86,6 +86,24 @@ export function isManager(user: User | null): boolean {
 }
 
 /**
+ * Check if user is an approver (enum APPROVER or RBAC Approver)
+ * @param user - The user object
+ * @returns true if user is an approver
+ */
+export function isApprover(user: User | null): boolean {
+  return hasAnyRole(user, ['APPROVER', 'Approver']);
+}
+
+/**
+ * Check if user is a regular internal user (enum USER or RBAC User)
+ * @param user - The user object
+ * @returns true if user is a regular user
+ */
+export function isUser(user: User | null): boolean {
+  return hasAnyRole(user, ['USER', 'User']);
+}
+
+/**
  * Get all user roles (enum + RBAC)
  * @param user - The user object
  * @returns Array of all roles the user has
@@ -196,4 +214,115 @@ export function logSecurityWarning(context: string, details: string): void {
     console.warn(`[SECURITY WARNING] ${context}: ${details}`);
   }
   // In production, this should send to monitoring service
+}
+
+// ===== BUSINESS USER PERMISSION CHECKS =====
+// For internal users (USER, BUYER, MANAGER, FINANCE, APPROVER)
+
+/**
+ * Check if user is a business/internal user (not VENDOR, not ADMIN)
+ * @param user - The user object
+ * @returns true if user is an internal business user
+ */
+export function isBusinessUser(user: User | null): boolean {
+  return hasAnyRole(user, ['USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager', 'FINANCE', 'Finance', 'APPROVER', 'Approver']);
+}
+
+/**
+ * Check if user can create tenders
+ * @param user - The user object
+ * @returns true if user can create tenders
+ */
+export function canCreateTender(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can approve purchase requisitions
+ * @param user - The user object
+ * @returns true if user can approve PRs
+ */
+export function canApprovePR(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'MANAGER', 'Manager', 'APPROVER', 'Approver']);
+}
+
+/**
+ * Check if user can approve purchase orders
+ * @param user - The user object
+ * @returns true if user can approve POs
+ */
+export function canApprovePO(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'MANAGER', 'Manager', 'FINANCE', 'Finance', 'APPROVER', 'Approver']);
+}
+
+/**
+ * Check if user can approve invoices
+ * @param user - The user object
+ * @returns true if user can approve invoices
+ */
+export function canApproveInvoice(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'MANAGER', 'Manager', 'FINANCE', 'Finance', 'APPROVER', 'Approver']);
+}
+
+/**
+ * Check if user can process payments
+ * @param user - The user object
+ * @returns true if user can process payments
+ */
+export function canProcessPayment(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'FINANCE', 'Finance']);
+}
+
+/**
+ * Check if user can create contracts
+ * @param user - The user object
+ * @returns true if user can create contracts
+ */
+export function canCreateContract(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can create purchase requisitions
+ * @param user - The user object
+ * @returns true if user can create PRs
+ */
+export function canCreatePR(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can create purchase orders
+ * @param user - The user object
+ * @returns true if user can create POs
+ */
+export function canCreatePO(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can manage budgets
+ * @param user - The user object
+ * @returns true if user can manage budgets
+ */
+export function canManageBudget(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'FINANCE', 'Finance', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can manage vendors
+ * @param user - The user object
+ * @returns true if user can manage vendors
+ */
+export function canManageVendors(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+}
+
+/**
+ * Check if user can score bids
+ * @param user - The user object
+ * @returns true if user can score bids
+ */
+export function canScoreBids(user: User | null): boolean {
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager', 'APPROVER', 'Approver']);
 }
