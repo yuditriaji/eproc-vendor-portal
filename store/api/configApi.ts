@@ -110,6 +110,29 @@ interface VendorRequest {
   plantId: string;
   purchasingOrgId: string;
   purchasingGroupId: string;
+  // Optional user account creation
+  createUserAccount?: boolean;
+  userEmail?: string;
+  userUsername?: string;
+  userFirstName?: string;
+  userLastName?: string;
+}
+
+interface VendorCreationResponse {
+  vendor: any;
+  user?: {
+    id: string;
+    email: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    isVerified: boolean;
+    isActive: boolean;
+    createdAt: string;
+  };
+  temporaryPassword?: string;
+  message: string;
 }
 
 export const configApi = baseApi.injectEndpoints({
@@ -347,7 +370,7 @@ export const configApi = baseApi.injectEndpoints({
     }),
 
     // Vendors
-    createVendor: builder.mutation<ApiResponse<any>, VendorRequest>({
+    createVendor: builder.mutation<VendorCreationResponse, VendorRequest>({
       query: (data) => ({
         url: 'vendors',
         method: 'POST',

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Building, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Building, Plus, Loader2, AlertCircle, UserPlus } from 'lucide-react';
+import { VendorCredentialsModal } from '@/components/admin/VendorCredentialsModal';
 import { 
   useGetVendorsQuery, 
   useCreateVendorMutation,
@@ -42,10 +43,18 @@ interface VendorFormData {
   plantId: string;
   purchasingOrgId: string;
   purchasingGroupId: string;
+  // User account fields
+  createUserAccount?: boolean;
+  userEmail?: string;
+  userUsername?: string;
+  userFirstName?: string;
+  userLastName?: string;
 }
 
 export default function VendorsPage() {
   const [showForm, setShowForm] = useState(false);
+  const [createUserAccount, setCreateUserAccount] = useState(false);
+  const [credentials, setCredentials] = useState<any>(null);
   const { data, isLoading, error } = useGetVendorsQuery();
   const { data: companyCodesData } = useGetCompanyCodesQuery();
   const { data: plantsData } = useGetPlantsQuery();
@@ -57,7 +66,7 @@ export default function VendorsPage() {
   
   const onSubmit = async (formData: VendorFormData) => {
     try {
-      const payload = {
+      const payload: any = {
         name: formData.name,
         registrationNumber: formData.registrationNumber,
         taxId: formData.taxId,
@@ -87,10 +96,28 @@ export default function VendorsPage() {
         purchasingGroupId: formData.purchasingGroupId,
       };
       
-      await createVendor(payload).unwrap();
-      toast.success('Vendor created successfully');
+      // Add user account fields if checkbox is checked
+      if (createUserAccount && formData.userEmail) {
+        payload.createUserAccount = true;
+        payload.userEmail = formData.userEmail;
+        if (formData.userUsername) payload.userUsername = formData.userUsername;
+        if (formData.userFirstName) payload.userFirstName = formData.userFirstName;
+        if (formData.userLastName) payload.userLastName = formData.userLastName;
+      }
+      
+      const result = await createVendor(payload).unwrap();
+      
+      // Check if user account was created
+      if (result.user && result.temporaryPassword) {
+        setCredentials(result);
+        toast.success('Vendor and user account created successfully!');
+      } else {
+        toast.success('Vendor created successfully');
+      }
+      
       reset();
       setShowForm(false);
+      setCreateUserAccount(false);
     } catch (err: any) {
       console.error('Error creating vendor:', err);
       const errorMessage = err?.data?.message || err?.data?.errors?.join(', ') || 'Failed to create vendor';
@@ -322,6 +349,78 @@ export default function VendorsPage() {
                 </div>
               </div>
 
+              {/* User Account Creation (Optional) */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="createUserAccount"
+                    checked={createUserAccount}
+                    onChange={(e) => setCreateUserAccount(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="createUserAccount" className="font-semibold cursor-pointer flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Create User Account for Vendor Portal
+                    </label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Optionally create a login account for this vendor. A secure temporary password will be auto-generated.
+                    </p>
+                  </div>
+                </div>
+
+                {createUserAccount && (
+                  <div className="ml-7 space-y-4 bg-muted/30 p-4 rounded-lg border">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-2">
+                        <Label>User Email *</Label>
+                        <Input
+                          type="email"
+                          placeholder="user@vendor.com"
+                          {...register('userEmail', {
+                            required: createUserAccount ? 'User email is required when creating account' : false,
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: 'Invalid email address'
+                            }
+                          })}
+                        />
+                        {errors.userEmail && <p className="text-sm text-destructive">{errors.userEmail.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Username (optional)</Label>
+                        <Input
+                          placeholder="Auto-generated from email"
+                          {...register('userUsername')}
+                        />
+                        <p className="text-xs text-muted-foreground">Leave empty to auto-generate</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>First Name (optional)</Label>
+                        <Input
+                          placeholder="John"
+                          {...register('userFirstName')}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name (optional)</Label>
+                        <Input
+                          placeholder="Doe"
+                          {...register('userLastName')}
+                        />
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="text-xs text-blue-800 dark:text-blue-200">
+                        <strong>Note:</strong> A secure 12-character password will be auto-generated and displayed after creation. 
+                        The vendor must change this password on first login.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <Button type="submit" disabled={isCreating}>
                   {isCreating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating...</> : 'Create'}
@@ -371,6 +470,13 @@ export default function VendorsPage() {
           ))
         )}
       </div>
+
+      {/* Credentials Modal */}
+      <VendorCredentialsModal
+        isOpen={!!credentials}
+        onClose={() => setCredentials(null)}
+        credentials={credentials}
+      />
     </div>
   );
 }
