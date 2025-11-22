@@ -66,7 +66,18 @@ export const baseApi = createApi({
     'Currencies',
     'Vendors',
     'Roles',
-    'UserRoles'
+    'UserRoles',
+    // Business Portal Tags
+    'PurchaseRequisitions',
+    'PurchaseOrders',
+    'Invoices',
+    'Payments',
+    'Budgets',
+    'Transactions',
+    'GoodsReceipts',
+    'Workflows',
+    'Approvals',
+    'BusinessDashboard',
   ],
   endpoints: () => ({}),
 });
