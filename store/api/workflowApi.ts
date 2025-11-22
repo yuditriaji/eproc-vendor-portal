@@ -125,8 +125,14 @@ export const workflowApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: 'Approvals', id }],
     }),
 
-    getMyPendingApprovals: builder.query<PaginatedResponse<ApprovalRequest>, void>({
-      query: () => 'approvals/my-pending',
+    getMyPendingApprovals: builder.query<
+      PaginatedResponse<ApprovalRequest>,
+      { page?: number; pageSize?: number; type?: string; priority?: string; search?: string }
+    >({
+      query: (params) => ({
+        url: 'approvals/my-pending',
+        params,
+      }),
       providesTags: ['Approvals'],
     }),
 
@@ -153,7 +159,7 @@ export const workflowApi = baseApi.injectEndpoints({
 
     getApprovalHistory: builder.query<
       PaginatedResponse<ApprovalHistory>,
-      { page?: number; pageSize?: number; approverId?: string }
+      { page?: number; pageSize?: number; approverId?: string; type?: string; action?: string; search?: string }
     >({
       query: (params) => ({
         url: 'approvals/history',

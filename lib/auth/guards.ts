@@ -1,11 +1,12 @@
 import { User } from '@/types';
 
-export type UserRole = 'ADMIN' | 'USER' | 'BUYER' | 'MANAGER' | 'FINANCE' | 'VENDOR';
+export type UserRole = 'ADMIN' | 'USER' | 'BUYER' | 'MANAGER' | 'FINANCE' | 'VENDOR' | 'APPROVER';
 
 // Role hierarchy - roles that can access lower-level routes
 const roleHierarchy: Record<UserRole, UserRole[]> = {
-  ADMIN: ['ADMIN', 'USER', 'BUYER', 'MANAGER', 'FINANCE', 'VENDOR'],
-  MANAGER: ['MANAGER', 'BUYER', 'USER'],
+  ADMIN: ['ADMIN', 'USER', 'BUYER', 'MANAGER', 'FINANCE', 'VENDOR', 'APPROVER'],
+  MANAGER: ['MANAGER', 'BUYER', 'USER', 'APPROVER'],
+  APPROVER: ['APPROVER'],
   BUYER: ['BUYER', 'USER'],
   FINANCE: ['FINANCE'],
   USER: ['USER'],
@@ -68,9 +69,10 @@ export function getRoleBasedRedirect(user: User | null): string {
     case 'BUYER':
     case 'MANAGER':
     case 'USER':
-      return '/buyer/dashboard';
+    case 'APPROVER':
+      return '/business/dashboard';
     case 'FINANCE':
-      return '/finance/dashboard';
+      return '/business/dashboard';
     case 'VENDOR':
       return '/vendor/dashboard';
     default:
@@ -119,6 +121,7 @@ export function getRoleName(role: UserRole): string {
     MANAGER: 'Manager',
     FINANCE: 'Finance',
     VENDOR: 'Vendor',
+    APPROVER: 'Approver',
   };
   return names[role] || role;
 }

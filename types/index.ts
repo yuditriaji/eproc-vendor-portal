@@ -234,14 +234,17 @@ export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 
 
 export interface Payment {
   id: string;
+  paymentNumber?: string;
   invoiceId: string;
   invoiceNumber?: string;
   contractId?: string;
   contractNumber?: string;
+  vendorId?: string;
+  vendorName?: string;
   amount: number;
   currency: string;
   status: PaymentStatus;
-  paymentDate?: string;
+  paymentDate: string;
   paymentMethod?: string;
   transactionId?: string;
   notes?: string;

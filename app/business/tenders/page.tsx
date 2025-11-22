@@ -29,7 +29,6 @@ import {
   Plus,
   FileText,
   Calendar,
-  DollarSign,
   Eye,
   Edit,
   Send,

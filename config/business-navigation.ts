@@ -10,7 +10,6 @@ import {
   CheckSquare,
   Building2,
   BarChart3,
-  Users,
   Settings,
   HelpCircle,
   FileSignature,
