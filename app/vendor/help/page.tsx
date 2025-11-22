@@ -31,7 +31,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { formatDate } from '@/lib/formatters';
-import type { FAQ, SupportTicket, SupportTicketStatus, SupportTicketPriority, SupportTicketCategory } from '@/types';
+import type { FAQ, SupportTicket, SupportTicketStatus } from '@/types';
 
 const statusConfig: Record<SupportTicketStatus, { label: string; variant: any; icon: any }> = {
   OPEN: { label: 'Open', variant: 'default', icon: AlertCircle },
