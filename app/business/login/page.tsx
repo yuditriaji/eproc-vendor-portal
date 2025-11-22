@@ -41,12 +41,20 @@ function LoginForm() {
     
     try {
       const result = await login({ email, password }).unwrap();
+      console.log('Login response:', result);
       
-      if (result.data && result.data.user && result.data.token) {
-        dispatch(setCredentials({ user: result.data.user, token: result.data.token }));
+      // Handle both wrapped and unwrapped responses
+      const responseData: any = result.data || result;
+      
+      if (responseData && (responseData.accessToken || responseData.token)) {
+        // Extract token and user from response
+        const token = responseData.accessToken || responseData.token;
+        const user = responseData.user;
+        
+        dispatch(setCredentials({ token, user }));
         
         // Redirect based on role
-        if (result.data.user.role === 'VENDOR') {
+        if (user.role === 'VENDOR') {
           router.push('/vendor/dashboard');
         } else {
           router.push('/business/dashboard');
