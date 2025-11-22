@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
 import { useGetBidsQuery } from '@/store/api/procurementApi';
+import { isOwnBid, logSecurityWarning } from '@/utils/permissions';
 import { BidsTable } from '@/components/bid/BidsTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +27,9 @@ export default function MyBidsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const pageSize = 20;
+  
+  // VENDOR RBAC: Get current user for ownership validation
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const { data: bidsResponse, isLoading } = useGetBidsQuery({
     page,
@@ -31,7 +37,24 @@ export default function MyBidsPage() {
     status: statusFilter === 'all' ? undefined : statusFilter,
   });
 
-  const bids = bidsResponse?.data || [];
+  // VENDOR RBAC: Filter to only show vendor's own bids (defense in depth)
+  const bids = useMemo(() => {
+    const rawBids = bidsResponse?.data || [];
+    
+    // Validate all bids belong to current vendor
+    const ownBids = rawBids.filter((bid) => {
+      const isOwn = isOwnBid(bid, user);
+      if (!isOwn && rawBids.length > 0) {
+        logSecurityWarning(
+          'MyBidsPage',
+          `Unauthorized bid detected: ${bid.id} does not belong to vendor ${user?.id}`
+        );
+      }
+      return isOwn;
+    });
+    
+    return ownBids;
+  }, [bidsResponse?.data, user]);
   const filteredBids = searchQuery
     ? bids.filter((bid) =>
         bid.tender?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||

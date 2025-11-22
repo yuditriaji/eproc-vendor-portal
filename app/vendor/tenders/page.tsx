@@ -18,19 +18,22 @@ import { Search, Grid3x3, List, SlidersHorizontal } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ViewMode = 'grid' | 'list';
-type StatusFilter = 'all' | 'PUBLISHED' | 'DRAFT' | 'CLOSED' | 'AWARDED';
+// VENDOR RBAC: Vendors can only view PUBLISHED and CLOSED/AWARDED tenders (no DRAFT)
+type StatusFilter = 'PUBLISHED' | 'CLOSED' | 'AWARDED';
 
 export default function TendersPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  // VENDOR RBAC: Default to PUBLISHED only - vendors cannot see draft tenders
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('PUBLISHED');
   const [page, setPage] = useState(1);
   const pageSize = 12;
 
+  // VENDOR RBAC: Always pass status filter to ensure only appropriate tenders are fetched
   const { data: tendersResponse, isLoading } = useGetTendersQuery({
     page,
     pageSize,
-    status: statusFilter === 'all' ? undefined : statusFilter,
+    status: statusFilter, // Always filter by status (default: PUBLISHED)
     search: searchQuery || undefined,
   });
 
@@ -44,7 +47,7 @@ export default function TendersPage() {
         <div>
           <h1 className="text-3xl font-bold">Tender Opportunities</h1>
           <p className="text-muted-foreground mt-1">
-            Browse and bid on available procurement opportunities
+            Browse and bid on published procurement opportunities
           </p>
         </div>
         <Button>
@@ -71,9 +74,8 @@ export default function TendersPage() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
+              {/* VENDOR RBAC: Only show PUBLISHED, CLOSED, AWARDED - no DRAFT access */}
               <SelectItem value="PUBLISHED">Published</SelectItem>
-              <SelectItem value="DRAFT">Draft</SelectItem>
               <SelectItem value="CLOSED">Closed</SelectItem>
               <SelectItem value="AWARDED">Awarded</SelectItem>
             </SelectContent>

@@ -111,3 +111,89 @@ export function getAllUserRoles(user: User | null): string[] {
 export function canAccess(user: User | null, requiredRoles: string[]): boolean {
   return hasAnyRole(user, requiredRoles);
 }
+
+// ===== VENDOR DATA OWNERSHIP VALIDATION =====
+// RBAC: Vendors can only access their own data
+
+/**
+ * Check if bid belongs to the current vendor
+ * @param bid - The bid object
+ * @param user - The user object (must be vendor)
+ * @returns true if bid belongs to vendor
+ */
+export function isOwnBid(bid: any, user: User | null): boolean {
+  if (!user || !isVendor(user)) return false;
+  return bid?.vendorId === user.id || bid?.vendor?.id === user.id;
+}
+
+/**
+ * Check if contract is assigned to the current vendor
+ * @param contract - The contract object
+ * @param user - The user object (must be vendor)
+ * @returns true if contract is assigned to vendor
+ */
+export function isAssignedContract(contract: any, user: User | null): boolean {
+  if (!user || !isVendor(user)) return false;
+  return contract?.vendorId === user.id || contract?.vendor?.id === user.id;
+}
+
+/**
+ * Check if invoice belongs to the current vendor
+ * @param invoice - The invoice object
+ * @param user - The user object (must be vendor)
+ * @returns true if invoice belongs to vendor
+ */
+export function isOwnInvoice(invoice: any, user: User | null): boolean {
+  if (!user || !isVendor(user)) return false;
+  return invoice?.vendorId === user.id || invoice?.vendor?.id === user.id;
+}
+
+/**
+ * Check if payment belongs to the current vendor
+ * @param payment - The payment object
+ * @param user - The user object (must be vendor)
+ * @returns true if payment belongs to vendor
+ */
+export function isOwnPayment(payment: any, user: User | null): boolean {
+  if (!user || !isVendor(user)) return false;
+  return payment?.vendorId === user.id || payment?.vendor?.id === user.id;
+}
+
+/**
+ * Check if document belongs to the current vendor
+ * @param document - The document object
+ * @param user - The user object (must be vendor)
+ * @returns true if document belongs to vendor
+ */
+export function isOwnDocument(document: any, user: User | null): boolean {
+  if (!user || !isVendor(user)) return false;
+  return document?.vendorId === user.id || document?.uploadedBy === user.id;
+}
+
+/**
+ * Filter array to only include vendor's own data
+ * @param items - Array of items to filter
+ * @param user - The current user (must be vendor)
+ * @param ownershipCheck - Function to check ownership
+ * @returns Filtered array containing only vendor's own items
+ */
+export function filterVendorOwnData<T>(
+  items: T[],
+  user: User | null,
+  ownershipCheck: (item: T, user: User | null) => boolean
+): T[] {
+  if (!user || !isVendor(user)) return [];
+  return items.filter((item) => ownershipCheck(item, user));
+}
+
+/**
+ * Log security warning when unauthorized data is detected
+ * @param context - Context of where the issue occurred
+ * @param details - Additional details
+ */
+export function logSecurityWarning(context: string, details: string): void {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(`[SECURITY WARNING] ${context}: ${details}`);
+  }
+  // In production, this should send to monitoring service
+}
