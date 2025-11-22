@@ -40,7 +40,7 @@ export default function BusinessLayout({
   // RBAC: Check if user is a business user (not VENDOR, not ADMIN)
   useEffect(() => {
     if (!isAuthenticated && !isAuthPage) {
-      router.push('/vendor/login'); // Redirect to login
+      router.push('/business/login'); // Redirect to business login
       return;
     }
     
@@ -59,7 +59,7 @@ export default function BusinessLayout({
   const handleLogout = async () => {
     try {
       await logout().unwrap();
-      router.push('/vendor/login');
+      router.push('/business/login');
     } catch (error) {
       console.error('Logout failed:', error);
     }
