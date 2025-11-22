@@ -3,6 +3,7 @@ import type {
   PurchaseRequisition,
   PurchaseOrder,
   Contract,
+  Bid,
   PaginatedResponse,
   ApiResponse,
   BusinessDashboardStats,
@@ -378,7 +379,23 @@ export const businessApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // ===== BID SCORING (BUSINESS) =====
+    // ===== BID EVALUATION (BUSINESS) =====
+    getBids: builder.query<
+      PaginatedResponse<Bid>,
+      { page?: number; pageSize?: number; status?: string; search?: string; tenderId?: string }
+    >({
+      query: (params) => ({
+        url: 'bids',
+        params,
+      }),
+      providesTags: ['Bids'],
+    }),
+
+    getBidById: builder.query<ApiResponse<Bid>, string>({
+      query: (id) => `bids/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'Bids', id }],
+    }),
+
     scoreBid: builder.mutation<
       ApiResponse<any>,
       { id: string; scores: Record<string, number>; comments?: string }
@@ -447,5 +464,7 @@ export const {
   useAwardTenderMutation,
   
   // Bids
+  useGetBidsQuery,
+  useGetBidByIdQuery,
   useScoreBidMutation,
 } = businessApi;

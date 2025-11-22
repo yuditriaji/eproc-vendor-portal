@@ -71,7 +71,7 @@ export interface TenderDocument {
 }
 
 // Bid types
-export type BidStatus = 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
+export type BidStatus = 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'EVALUATED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
 
 export interface Bid {
   id: string;
@@ -85,12 +85,17 @@ export interface Bid {
   };
   referenceNumber?: string;
   vendorId: string;
+  vendorName?: string;
+  tenderTitle?: string;
+  tenderNumber?: string;
   bidAmount?: number;
+  amount?: number;  // Alias for bidAmount
   currency: string;
   submittedAt?: string;
   createdAt?: string;
   updatedAt?: string;
   status: BidStatus;
+  score?: number;  // Evaluation score (0-100)
   documents?: BidDocument[];
   technicalProposal?: string;
   financialProposal?: FinancialProposal;
@@ -127,8 +132,11 @@ export type ContractStatus = 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'SUSPENDED'
 export interface Contract {
   id: string;
   title: string;
+  contractNumber?: string;
   vendorId: string;
+  vendorName?: string;
   buyerId: string;
+  buyerName?: string;
   amount: number;
   currency: string;
   startDate: string;
