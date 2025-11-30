@@ -78,6 +78,7 @@ export const baseApi = createApi({
     'Workflows',
     'Approvals',
     'BusinessDashboard',
+    'Statistics',
   ],
   endpoints: () => ({}),
 });

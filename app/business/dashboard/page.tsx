@@ -2,6 +2,7 @@
 
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
+import { useGetBusinessDashboardStatsQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,44 +29,173 @@ import { getRoleDisplayName } from '@/config/business-navigation';
 export default function BusinessDashboardPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const userRole = user?.role || '';
+  
+  // Fetch real dashboard statistics from API
+  const { data: dashboardData, isLoading } = useGetBusinessDashboardStatsQuery();
+  const dashboardStats = dashboardData?.data;
 
-  // Role-based statistics (mock data - will be replaced with API calls)
+  // Role-based statistics from API
   const getStatsForRole = () => {
+    if (!dashboardStats) {
+      return [
+        { title: 'Loading...', value: '...', icon: Package, change: 'Fetching data', trend: 'neutral' as const },
+      ];
+    }
     switch (userRole) {
       case 'USER':
         return [
-          { title: 'My Tenders', value: 8, icon: FileText, change: '+2 this month', trend: 'up' },
-          { title: 'Active Bids', value: 24, icon: Send, change: 'Across all tenders', trend: 'neutral' },
-          { title: 'Pending Evaluation', value: 12, icon: CheckSquare, change: 'Needs scoring', trend: 'up' },
-          { title: 'Awarded Tenders', value: 3, icon: TrendingUp, change: 'This quarter', trend: 'up' },
+          { 
+            title: 'My Tenders', 
+            value: dashboardStats.totalTenders || 0, 
+            icon: FileText, 
+            change: `${dashboardStats.publishedTenders || 0} published`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Active Tenders', 
+            value: dashboardStats.activeTenders || 0, 
+            icon: Send, 
+            change: 'In progress', 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Draft Tenders', 
+            value: dashboardStats.draftTenders || 0, 
+            icon: CheckSquare, 
+            change: 'Unpublished', 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Closed Tenders', 
+            value: dashboardStats.closedTenders || 0, 
+            icon: TrendingUp, 
+            change: 'For evaluation', 
+            trend: 'neutral' as const 
+          },
         ];
       case 'BUYER':
         return [
-          { title: 'Active Contracts', value: 15, icon: FileCheck, change: '+3 this month', trend: 'up' },
-          { title: 'Purchase Orders', value: 42, icon: ShoppingCart, change: '8 pending approval', trend: 'neutral' },
-          { title: 'Purchase Requisitions', value: 28, icon: FileText, change: '5 awaiting PO', trend: 'neutral' },
-          { title: 'Active Vendors', value: 67, icon: Users, change: '92% compliance', trend: 'up' },
+          { 
+            title: 'Active Contracts', 
+            value: dashboardStats.activeContracts || 0, 
+            icon: FileCheck, 
+            change: `${dashboardStats.totalContracts || 0} total`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Purchase Orders', 
+            value: dashboardStats.totalPOs || 0, 
+            icon: ShoppingCart, 
+            change: `${dashboardStats.pendingPOs || 0} pending approval`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Purchase Requisitions', 
+            value: dashboardStats.totalPRs || 0, 
+            icon: FileText, 
+            change: `${dashboardStats.approvedPRs || 0} approved`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Active Vendors', 
+            value: dashboardStats.activeVendors || 0, 
+            icon: Users, 
+            change: `${dashboardStats.totalVendors || 0} total`, 
+            trend: 'up' as const 
+          },
         ];
       case 'MANAGER':
         return [
-          { title: 'Pending Approvals', value: 18, icon: AlertCircle, change: 'Requires action', trend: 'up' },
-          { title: 'Team Tenders', value: 35, icon: FileText, change: 'All departments', trend: 'neutral' },
-          { title: 'Monthly Budget', value: '$485K', icon: DollarSign, change: '68% utilized', trend: 'neutral' },
-          { title: 'Active Contracts', value: 52, icon: FileCheck, change: '+7 this month', trend: 'up' },
+          { 
+            title: 'Pending Approvals', 
+            value: dashboardStats.pendingApprovals || 0, 
+            icon: AlertCircle, 
+            change: 'Requires action', 
+            trend: 'up' as const 
+          },
+          { 
+            title: 'Team Tenders', 
+            value: dashboardStats.totalTenders || 0, 
+            icon: FileText, 
+            change: 'All departments', 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Active Contracts', 
+            value: dashboardStats.activeContracts || 0, 
+            icon: FileCheck, 
+            change: `${dashboardStats.totalContracts || 0} total`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Purchase Orders', 
+            value: dashboardStats.totalPOs || 0, 
+            icon: ShoppingCart, 
+            change: `${dashboardStats.activePOs || 0} active`, 
+            trend: 'neutral' as const 
+          },
         ];
       case 'FINANCE':
         return [
-          { title: 'Pending Invoices', value: 23, icon: Receipt, change: 'Awaiting approval', trend: 'up' },
-          { title: 'Payment Queue', value: 15, icon: CreditCard, change: '$2.3M total', trend: 'neutral' },
-          { title: 'Budget Available', value: '$1.8M', icon: DollarSign, change: '45% of total', trend: 'up' },
-          { title: 'Processed Payments', value: 89, icon: CheckSquare, change: 'This month', trend: 'up' },
+          { 
+            title: 'Pending Invoices', 
+            value: dashboardStats.pendingInvoices || 0, 
+            icon: Receipt, 
+            change: 'Awaiting approval', 
+            trend: dashboardStats.pendingInvoices ? 'up' as const : 'neutral' as const 
+          },
+          { 
+            title: 'Payment Queue', 
+            value: dashboardStats.pendingPayments || 0, 
+            icon: CreditCard, 
+            change: 'To process', 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Allocated Budget', 
+            value: dashboardStats.allocatedBudget || 0, 
+            icon: DollarSign, 
+            change: `${dashboardStats.totalBudget || 0} total`, 
+            trend: 'neutral' as const 
+          },
+          { 
+            title: 'Processed Payments', 
+            value: dashboardStats.processedPayments || 0, 
+            icon: CheckSquare, 
+            change: 'Completed', 
+            trend: 'up' as const 
+          },
         ];
       case 'APPROVER':
         return [
-          { title: 'Pending PRs', value: 8, icon: FileText, change: 'Awaiting approval', trend: 'up' },
-          { title: 'Pending POs', value: 12, icon: ShoppingCart, change: 'Awaiting approval', trend: 'up' },
-          { title: 'Pending Invoices', value: 15, icon: Receipt, change: 'Awaiting approval', trend: 'up' },
-          { title: 'Approved Today', value: 24, icon: CheckSquare, change: 'All types', trend: 'up' },
+          { 
+            title: 'Pending PRs', 
+            value: dashboardStats.pendingPRApprovals || 0, 
+            icon: FileText, 
+            change: 'Awaiting approval', 
+            trend: dashboardStats.pendingPRApprovals ? 'up' as const : 'neutral' as const 
+          },
+          { 
+            title: 'Pending POs', 
+            value: dashboardStats.pendingPOApprovals || 0, 
+            icon: ShoppingCart, 
+            change: 'Awaiting approval', 
+            trend: dashboardStats.pendingPOApprovals ? 'up' as const : 'neutral' as const 
+          },
+          { 
+            title: 'Pending Invoices', 
+            value: dashboardStats.pendingInvoiceApprovals || 0, 
+            icon: Receipt, 
+            change: 'Awaiting approval', 
+            trend: dashboardStats.pendingInvoiceApprovals ? 'up' as const : 'neutral' as const 
+          },
+          { 
+            title: 'Approved Today', 
+            value: dashboardStats.approvedToday || 0, 
+            icon: CheckSquare, 
+            change: 'All types', 
+            trend: 'up' as const 
+          },
         ];
       default:
         return [
@@ -170,7 +300,9 @@ export default function BusinessDashboardPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? '...' : stat.value}
+                </div>
                 <p className={`text-xs mt-1 flex items-center gap-1 ${
                   stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
                 }`}>
@@ -257,7 +389,7 @@ export default function BusinessDashboardPage() {
       </div>
 
       {/* Role-Specific Sections */}
-      {userRole === 'APPROVER' && (
+      {userRole === 'APPROVER' && dashboardStats && (
         <Card className="border-destructive/50">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -271,7 +403,7 @@ export default function BusinessDashboardPage() {
               <div className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
                   <p className="font-medium">Purchase Requisitions</p>
-                  <p className="text-sm text-muted-foreground">8 items pending</p>
+                  <p className="text-sm text-muted-foreground">{dashboardStats.pendingPRApprovals || 0} items pending</p>
                 </div>
                 <Button size="sm" asChild>
                   <Link href="/business/approvals?type=pr">Review</Link>
@@ -280,7 +412,7 @@ export default function BusinessDashboardPage() {
               <div className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
                   <p className="font-medium">Purchase Orders</p>
-                  <p className="text-sm text-muted-foreground">12 items pending</p>
+                  <p className="text-sm text-muted-foreground">{dashboardStats.pendingPOApprovals || 0} items pending</p>
                 </div>
                 <Button size="sm" asChild>
                   <Link href="/business/approvals?type=po">Review</Link>
@@ -289,7 +421,7 @@ export default function BusinessDashboardPage() {
               <div className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
                   <p className="font-medium">Invoices</p>
-                  <p className="text-sm text-muted-foreground">15 items pending</p>
+                  <p className="text-sm text-muted-foreground">{dashboardStats.pendingInvoiceApprovals || 0} items pending</p>
                 </div>
                 <Button size="sm" asChild>
                   <Link href="/business/approvals?type=invoice">Review</Link>
@@ -300,7 +432,7 @@ export default function BusinessDashboardPage() {
         </Card>
       )}
 
-      {userRole === 'FINANCE' && (
+      {userRole === 'FINANCE' && dashboardStats && (
         <Card className="border-yellow-500/50">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -313,20 +445,20 @@ export default function BusinessDashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
                 <div>
-                  <p className="font-medium">High Priority Payments</p>
-                  <p className="text-sm text-muted-foreground">$850,000 • 5 invoices</p>
+                  <p className="font-medium">Pending Payments</p>
+                  <p className="text-sm text-muted-foreground">{dashboardStats.pendingPayments || 0} to process</p>
                 </div>
                 <Button size="sm" variant="default" asChild>
-                  <Link href="/business/payments?priority=high">Process</Link>
+                  <Link href="/business/payments">Process</Link>
                 </Button>
               </div>
               <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
                 <div>
-                  <p className="font-medium">Standard Payments</p>
-                  <p className="text-sm text-muted-foreground">$1,450,000 • 10 invoices</p>
+                  <p className="font-medium">Pending Invoices</p>
+                  <p className="text-sm text-muted-foreground">{dashboardStats.pendingInvoices || 0} awaiting approval</p>
                 </div>
                 <Button size="sm" variant="outline" asChild>
-                  <Link href="/business/payments">View Queue</Link>
+                  <Link href="/business/invoices?status=PENDING_APPROVAL">Review</Link>
                 </Button>
               </div>
             </div>
@@ -334,7 +466,7 @@ export default function BusinessDashboardPage() {
         </Card>
       )}
 
-      {(userRole === 'USER' || userRole === 'BUYER') && (
+      {(userRole === 'USER' || userRole === 'BUYER') && dashboardStats && (
         <Card>
           <CardHeader>
             <CardTitle>Active Tenders Overview</CardTitle>
@@ -344,15 +476,15 @@ export default function BusinessDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 border rounded-lg">
                 <p className="text-sm text-muted-foreground">Draft</p>
-                <p className="text-2xl font-bold mt-1">5</p>
+                <p className="text-2xl font-bold mt-1">{dashboardStats.draftTenders || 0}</p>
               </div>
               <div className="p-4 border rounded-lg">
                 <p className="text-sm text-muted-foreground">Published</p>
-                <p className="text-2xl font-bold mt-1">12</p>
+                <p className="text-2xl font-bold mt-1">{dashboardStats.publishedTenders || 0}</p>
               </div>
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Under Evaluation</p>
-                <p className="text-2xl font-bold mt-1">8</p>
+                <p className="text-sm text-muted-foreground">Closed</p>
+                <p className="text-2xl font-bold mt-1">{dashboardStats.closedTenders || 0}</p>
               </div>
             </div>
           </CardContent>

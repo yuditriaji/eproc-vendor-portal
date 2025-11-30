@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { useGetTendersQuery } from '@/store/api/procurementApi';
+import { useGetTendersQuery, useGetTenderStatisticsQuery } from '@/store/api/procurementApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,10 @@ export default function BusinessTendersPage() {
     status: statusFilter === 'all' ? undefined : statusFilter,
     search: searchQuery || undefined,
   });
+  
+  // Fetch tender statistics from backend
+  const { data: statsResponse, isLoading: statsLoading } = useGetTenderStatisticsQuery();
+  const tenderStats = statsResponse?.data?.summary;
 
   const tenders = tendersResponse?.data || [];
   const totalPages = tendersResponse?.meta?.totalPages || 1;
@@ -96,34 +100,36 @@ export default function BusinessTendersPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : total}</div>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '...' : tenderStats?.totalTenders || 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">All statuses</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Published</CardTitle>
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
             <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {isLoading ? '...' : tenders.filter(t => t.status === 'PUBLISHED').length}
+              {statsLoading ? '...' : tenderStats?.activeTenders || 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Active tenders</p>
+            <p className="text-xs text-muted-foreground mt-1">Published tenders</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Draft</CardTitle>
+            <CardTitle className="text-sm font-medium">Closed</CardTitle>
             <Edit className="h-4 w-4 text-gray-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">
-              {isLoading ? '...' : tenders.filter(t => t.status === 'DRAFT').length}
+              {statsLoading ? '...' : tenderStats?.closedTenders || 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Unpublished</p>
+            <p className="text-xs text-muted-foreground mt-1">For evaluation</p>
           </CardContent>
         </Card>
 
@@ -134,7 +140,7 @@ export default function BusinessTendersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {isLoading ? '...' : tenders.filter(t => t.status === 'AWARDED').length}
+              {statsLoading ? '...' : tenderStats?.awardedTenders || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Completed</p>
           </CardContent>

@@ -220,21 +220,22 @@ export function logSecurityWarning(context: string, details: string): void {
 // For internal users (USER, BUYER, MANAGER, FINANCE, APPROVER)
 
 /**
- * Check if user is a business/internal user (not VENDOR, not ADMIN)
+ * Check if user is a business/internal user (not VENDOR)
  * @param user - The user object
  * @returns true if user is an internal business user
  */
 export function isBusinessUser(user: User | null): boolean {
-  return hasAnyRole(user, ['USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager', 'FINANCE', 'Finance', 'APPROVER', 'Approver']);
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager', 'FINANCE', 'Finance', 'APPROVER', 'Approver']);
 }
 
 /**
  * Check if user can create tenders
+ * Only USER (Procurement Officer) and MANAGER can create tenders
  * @param user - The user object
  * @returns true if user can create tenders
  */
 export function canCreateTender(user: User | null): boolean {
-  return hasAnyRole(user, ['ADMIN', 'Admin', 'USER', 'User', 'BUYER', 'Buyer', 'MANAGER', 'Manager']);
+  return hasAnyRole(user, ['ADMIN', 'Admin', 'USER', 'User', 'MANAGER', 'Manager']);
 }
 
 /**

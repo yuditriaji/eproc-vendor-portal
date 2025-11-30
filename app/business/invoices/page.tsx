@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { useGetInvoicesQuery } from '@/store/api/financeApi';
+import { useGetInvoicesQuery, useGetInvoiceStatisticsQuery } from '@/store/api/financeApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +64,10 @@ export default function InvoicesPage() {
     status: statusFilter === 'all' ? undefined : statusFilter,
     search: searchQuery || undefined,
   });
+  
+  // Fetch invoice statistics from backend
+  const { data: statsResponse, isLoading: statsLoading } = useGetInvoiceStatisticsQuery();
+  const invoiceStats = statsResponse?.data;
 
   const invoices = invoicesResponse?.data || [];
   const totalPages = invoicesResponse?.meta?.totalPages || 1;
@@ -71,14 +75,14 @@ export default function InvoicesPage() {
 
   const canApprove = canApproveInvoice(user);
 
-  // Calculate stats
+  // Use backend statistics
   const stats = {
-    total,
-    pending: invoices.filter(inv => inv.status === 'PENDING_APPROVAL').length,
-    approved: invoices.filter(inv => inv.status === 'APPROVED').length,
-    paid: invoices.filter(inv => inv.status === 'PAID').length,
-    overdue: invoices.filter(inv => inv.status === 'OVERDUE').length,
-    totalAmount: invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
+    total: invoiceStats?.total || 0,
+    pending: invoiceStats?.pendingApproval || 0,
+    approved: invoiceStats?.approved || 0,
+    paid: invoiceStats?.paid || 0,
+    overdue: invoiceStats?.overdue || 0,
+    totalAmount: invoiceStats?.totalAmount || 0,
   };
 
   return (
@@ -107,7 +111,7 @@ export default function InvoicesPage() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.total}</div>
+            <div className="text-2xl font-bold">{statsLoading ? '...' : stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1">All invoices</p>
           </CardContent>
         </Card>
@@ -119,7 +123,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {isLoading ? '...' : stats.pending}
+              {statsLoading ? '...' : stats.pending}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Need approval</p>
           </CardContent>
@@ -132,7 +136,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {isLoading ? '...' : stats.approved}
+              {statsLoading ? '...' : stats.approved}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Ready to pay</p>
           </CardContent>
@@ -145,7 +149,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {isLoading ? '...' : stats.paid}
+              {statsLoading ? '...' : stats.paid}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Completed</p>
           </CardContent>
@@ -158,7 +162,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {isLoading ? '...' : stats.overdue}
+              {statsLoading ? '...' : stats.overdue}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Past due</p>
           </CardContent>
@@ -171,7 +175,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : formatCurrency(stats.totalAmount, 'USD')}
+              {statsLoading ? '...' : formatCurrency(stats.totalAmount, 'USD')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Outstanding</p>
           </CardContent>

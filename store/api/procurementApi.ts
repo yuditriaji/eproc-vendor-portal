@@ -68,6 +68,17 @@ export const procurementApi = baseApi.injectEndpoints({
       query: () => 'dashboard/stats',
       providesTags: ['Dashboard'],
     }),
+    
+    // Statistics
+    getTenderStatistics: builder.query<ApiResponse<any>, void>({
+      query: () => 'transactions/statistics/tenders',
+      providesTags: ['Tenders', 'Statistics'],
+    }),
+    
+    getPurchaseOrderStatistics: builder.query<ApiResponse<any>, void>({
+      query: () => 'transactions/statistics/purchase-orders',
+      providesTags: ['PurchaseOrders', 'Statistics'],
+    }),
   }),
 });
 
@@ -80,4 +91,6 @@ export const {
   useUpdateBidMutation,
   useSubmitBidMutation,
   useGetDashboardStatsQuery,
+  useGetTenderStatisticsQuery,
+  useGetPurchaseOrderStatisticsQuery,
 } = procurementApi;
