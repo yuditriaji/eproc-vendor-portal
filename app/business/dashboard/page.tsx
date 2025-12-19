@@ -29,7 +29,7 @@ import { getRoleDisplayName } from '@/config/business-navigation';
 export default function BusinessDashboardPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const userRole = user?.role || '';
-  
+
   // Fetch real dashboard statistics from API
   const { data: dashboardData, isLoading } = useGetBusinessDashboardStatsQuery();
   const dashboardStats = dashboardData?.data;
@@ -44,157 +44,157 @@ export default function BusinessDashboardPage() {
     switch (userRole) {
       case 'USER':
         return [
-          { 
-            title: 'My Tenders', 
-            value: dashboardStats.totalTenders || 0, 
-            icon: FileText, 
-            change: `${dashboardStats.publishedTenders || 0} published`, 
-            trend: 'neutral' as const 
+          {
+            title: 'My Tenders',
+            value: dashboardStats.totalTenders || 0,
+            icon: FileText,
+            change: `${dashboardStats.publishedTenders || 0} published`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Active Tenders', 
-            value: dashboardStats.activeTenders || 0, 
-            icon: Send, 
-            change: 'In progress', 
-            trend: 'neutral' as const 
+          {
+            title: 'Active Tenders',
+            value: dashboardStats.activeTenders || 0,
+            icon: Send,
+            change: 'In progress',
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Draft Tenders', 
-            value: dashboardStats.draftTenders || 0, 
-            icon: CheckSquare, 
-            change: 'Unpublished', 
-            trend: 'neutral' as const 
+          {
+            title: 'Draft Tenders',
+            value: dashboardStats.draftTenders || 0,
+            icon: CheckSquare,
+            change: 'Unpublished',
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Closed Tenders', 
-            value: dashboardStats.closedTenders || 0, 
-            icon: TrendingUp, 
-            change: 'For evaluation', 
-            trend: 'neutral' as const 
+          {
+            title: 'Closed Tenders',
+            value: dashboardStats.closedTenders || 0,
+            icon: TrendingUp,
+            change: 'For evaluation',
+            trend: 'neutral' as const
           },
         ];
       case 'BUYER':
         return [
-          { 
-            title: 'Active Contracts', 
-            value: dashboardStats.activeContracts || 0, 
-            icon: FileCheck, 
-            change: `${dashboardStats.totalContracts || 0} total`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Active Contracts',
+            value: dashboardStats.activeContracts || 0,
+            icon: FileCheck,
+            change: `${dashboardStats.totalContracts || 0} total`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Purchase Orders', 
-            value: dashboardStats.totalPOs || 0, 
-            icon: ShoppingCart, 
-            change: `${dashboardStats.pendingPOs || 0} pending approval`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Purchase Orders',
+            value: dashboardStats.totalPOs || 0,
+            icon: ShoppingCart,
+            change: `${dashboardStats.pendingPOs || 0} pending approval`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Purchase Requisitions', 
-            value: dashboardStats.totalPRs || 0, 
-            icon: FileText, 
-            change: `${dashboardStats.approvedPRs || 0} approved`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Purchase Requisitions',
+            value: dashboardStats.totalPRs || 0,
+            icon: FileText,
+            change: `${dashboardStats.approvedPRs || 0} approved`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Active Vendors', 
-            value: dashboardStats.activeVendors || 0, 
-            icon: Users, 
-            change: `${dashboardStats.totalVendors || 0} total`, 
-            trend: 'up' as const 
+          {
+            title: 'Active Vendors',
+            value: dashboardStats.activeVendors || 0,
+            icon: Users,
+            change: `${dashboardStats.totalVendors || 0} total`,
+            trend: 'up' as const
           },
         ];
       case 'MANAGER':
         return [
-          { 
-            title: 'Pending Approvals', 
-            value: dashboardStats.pendingApprovals || 0, 
-            icon: AlertCircle, 
-            change: 'Requires action', 
-            trend: 'up' as const 
+          {
+            title: 'Pending Approvals',
+            value: dashboardStats.pendingApprovals || 0,
+            icon: AlertCircle,
+            change: 'Requires action',
+            trend: 'up' as const
           },
-          { 
-            title: 'Team Tenders', 
-            value: dashboardStats.totalTenders || 0, 
-            icon: FileText, 
-            change: 'All departments', 
-            trend: 'neutral' as const 
+          {
+            title: 'Team Tenders',
+            value: dashboardStats.totalTenders || 0,
+            icon: FileText,
+            change: 'All departments',
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Active Contracts', 
-            value: dashboardStats.activeContracts || 0, 
-            icon: FileCheck, 
-            change: `${dashboardStats.totalContracts || 0} total`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Active Contracts',
+            value: dashboardStats.activeContracts || 0,
+            icon: FileCheck,
+            change: `${dashboardStats.totalContracts || 0} total`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Purchase Orders', 
-            value: dashboardStats.totalPOs || 0, 
-            icon: ShoppingCart, 
-            change: `${dashboardStats.activePOs || 0} active`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Purchase Orders',
+            value: dashboardStats.totalPOs || 0,
+            icon: ShoppingCart,
+            change: `${dashboardStats.activePOs || 0} active`,
+            trend: 'neutral' as const
           },
         ];
       case 'FINANCE':
         return [
-          { 
-            title: 'Pending Invoices', 
-            value: dashboardStats.pendingInvoices || 0, 
-            icon: Receipt, 
-            change: 'Awaiting approval', 
-            trend: dashboardStats.pendingInvoices ? 'up' as const : 'neutral' as const 
+          {
+            title: 'Pending Invoices',
+            value: dashboardStats.pendingInvoices || 0,
+            icon: Receipt,
+            change: 'Awaiting approval',
+            trend: dashboardStats.pendingInvoices ? 'up' as const : 'neutral' as const
           },
-          { 
-            title: 'Payment Queue', 
-            value: dashboardStats.pendingPayments || 0, 
-            icon: CreditCard, 
-            change: 'To process', 
-            trend: 'neutral' as const 
+          {
+            title: 'Payment Queue',
+            value: dashboardStats.pendingPayments || 0,
+            icon: CreditCard,
+            change: 'To process',
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Allocated Budget', 
-            value: dashboardStats.allocatedBudget || 0, 
-            icon: DollarSign, 
-            change: `${dashboardStats.totalBudget || 0} total`, 
-            trend: 'neutral' as const 
+          {
+            title: 'Allocated Budget',
+            value: dashboardStats.allocatedBudget || 0,
+            icon: DollarSign,
+            change: `${dashboardStats.totalBudget || 0} total`,
+            trend: 'neutral' as const
           },
-          { 
-            title: 'Processed Payments', 
-            value: dashboardStats.processedPayments || 0, 
-            icon: CheckSquare, 
-            change: 'Completed', 
-            trend: 'up' as const 
+          {
+            title: 'Processed Payments',
+            value: dashboardStats.processedPayments || 0,
+            icon: CheckSquare,
+            change: 'Completed',
+            trend: 'up' as const
           },
         ];
       case 'APPROVER':
         return [
-          { 
-            title: 'Pending PRs', 
-            value: dashboardStats.pendingPRApprovals || 0, 
-            icon: FileText, 
-            change: 'Awaiting approval', 
-            trend: dashboardStats.pendingPRApprovals ? 'up' as const : 'neutral' as const 
+          {
+            title: 'Pending PRs',
+            value: dashboardStats.pendingPRApprovals || 0,
+            icon: FileText,
+            change: 'Awaiting approval',
+            trend: dashboardStats.pendingPRApprovals ? 'up' as const : 'neutral' as const
           },
-          { 
-            title: 'Pending POs', 
-            value: dashboardStats.pendingPOApprovals || 0, 
-            icon: ShoppingCart, 
-            change: 'Awaiting approval', 
-            trend: dashboardStats.pendingPOApprovals ? 'up' as const : 'neutral' as const 
+          {
+            title: 'Pending POs',
+            value: dashboardStats.pendingPOApprovals || 0,
+            icon: ShoppingCart,
+            change: 'Awaiting approval',
+            trend: dashboardStats.pendingPOApprovals ? 'up' as const : 'neutral' as const
           },
-          { 
-            title: 'Pending Invoices', 
-            value: dashboardStats.pendingInvoiceApprovals || 0, 
-            icon: Receipt, 
-            change: 'Awaiting approval', 
-            trend: dashboardStats.pendingInvoiceApprovals ? 'up' as const : 'neutral' as const 
+          {
+            title: 'Pending Invoices',
+            value: dashboardStats.pendingInvoiceApprovals || 0,
+            icon: Receipt,
+            change: 'Awaiting approval',
+            trend: dashboardStats.pendingInvoiceApprovals ? 'up' as const : 'neutral' as const
           },
-          { 
-            title: 'Approved Today', 
-            value: dashboardStats.approvedToday || 0, 
-            icon: CheckSquare, 
-            change: 'All types', 
-            trend: 'up' as const 
+          {
+            title: 'Approved Today',
+            value: dashboardStats.approvedToday || 0,
+            icon: CheckSquare,
+            change: 'All types',
+            trend: 'up' as const
           },
         ];
       default:
@@ -242,37 +242,15 @@ export default function BusinessDashboardPage() {
     }
   };
 
-  // Recent activities (mock data)
-  const recentActivities = [
-    {
-      id: '1',
-      type: 'tender',
-      title: 'New tender published: Office Equipment Q1 2025',
-      timestamp: '2 hours ago',
-      status: 'published',
-    },
-    {
-      id: '2',
-      type: 'approval',
-      title: 'Purchase Requisition #PR-2025-045 approved',
-      timestamp: '4 hours ago',
-      status: 'approved',
-    },
-    {
-      id: '3',
-      type: 'payment',
-      title: 'Payment processed: Invoice #INV-2025-123',
-      timestamp: '6 hours ago',
-      status: 'completed',
-    },
-    {
-      id: '4',
-      type: 'bid',
-      title: 'New bid received for Tender #TND-2025-012',
-      timestamp: '1 day ago',
-      status: 'pending',
-    },
-  ];
+  // Recent activities - TODO: Fetch from API
+  // Currently empty until activity tracking API is implemented
+  const recentActivities: Array<{
+    id: string;
+    type: string;
+    title: string;
+    timestamp: string;
+    status: string;
+  }> = [];
 
   const stats = getStatsForRole();
   const quickActions = getQuickActionsForRole();
@@ -303,9 +281,8 @@ export default function BusinessDashboardPage() {
                 <div className="text-2xl font-bold">
                   {isLoading ? '...' : stat.value}
                 </div>
-                <p className={`text-xs mt-1 flex items-center gap-1 ${
-                  stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
-                }`}>
+                <p className={`text-xs mt-1 flex items-center gap-1 ${stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
+                  }`}>
                   {stat.trend === 'up' && <TrendingUp className="h-3 w-3" />}
                   {stat.change}
                 </p>
@@ -377,7 +354,7 @@ export default function BusinessDashboardPage() {
                   </div>
                   <Badge variant={
                     activity.status === 'approved' || activity.status === 'completed' ? 'default' :
-                    activity.status === 'pending' ? 'secondary' : 'outline'
+                      activity.status === 'pending' ? 'secondary' : 'outline'
                   }>
                     {activity.status}
                   </Badge>
