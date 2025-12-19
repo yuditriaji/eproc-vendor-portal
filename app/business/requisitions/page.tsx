@@ -38,10 +38,11 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { canCreatePR } from '@/utils/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type PRStatusFilter = 'all' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CONVERTED_TO_PO';
+type PRStatusFilter = 'all' | 'DRAFT' | 'PENDING' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CONVERTED_TO_PO';
 
 const statusConfig = {
   DRAFT: { label: 'Draft', variant: 'secondary' as const, icon: FileText },
+  PENDING: { label: 'Pending Approval', variant: 'default' as const, icon: Clock },
   PENDING_APPROVAL: { label: 'Pending Approval', variant: 'default' as const, icon: Clock },
   APPROVED: { label: 'Approved', variant: 'default' as const, icon: CheckCircle },
   REJECTED: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle },

@@ -404,7 +404,7 @@ export interface FAQ {
 }
 
 // Purchase Requisition types
-export type PurchaseRequisitionStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CONVERTED_TO_PO';
+export type PurchaseRequisitionStatus = 'DRAFT' | 'PENDING' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CONVERTED_TO_PO';
 
 export interface PurchaseRequisitionItem {
   id: string;

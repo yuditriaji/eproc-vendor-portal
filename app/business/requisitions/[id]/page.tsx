@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { useGetPurchaseRequisitionByIdQuery } from '@/store/api/businessApi';
+import { useGetPurchaseRequisitionByIdQuery, useUpdatePurchaseRequisitionMutation } from '@/store/api/businessApi';
 import { useApprovePRInWorkflowMutation, useCreatePOFromPRMutation } from '@/store/api/workflowApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
     ShoppingCart,
     User,
     Clock,
+    Send,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,6 +37,7 @@ import { useState } from 'react';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
     DRAFT: { label: 'Draft', variant: 'secondary' },
+    PENDING: { label: 'Pending Approval', variant: 'outline' },
     PENDING_APPROVAL: { label: 'Pending Approval', variant: 'outline' },
     APPROVED: { label: 'Approved', variant: 'default' },
     REJECTED: { label: 'Rejected', variant: 'destructive' },
@@ -50,10 +52,12 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
     const [isCreatePODialogOpen, setIsCreatePODialogOpen] = useState(false);
+    const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
 
-    const { data: prResponse, isLoading } = useGetPurchaseRequisitionByIdQuery(id);
+    const { data: prResponse, isLoading, refetch } = useGetPurchaseRequisitionByIdQuery(id);
     const [approvePR, { isLoading: isApproving }] = useApprovePRInWorkflowMutation();
     const [createPO, { isLoading: isCreatingPO }] = useCreatePOFromPRMutation();
+    const [updatePR, { isLoading: isSubmitting }] = useUpdatePurchaseRequisitionMutation();
 
     const pr = prResponse?.data;
 
@@ -116,8 +120,27 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     }
 
     const status = statusConfig[pr.status] || statusConfig.DRAFT;
-    const canApprove = pr.status === 'PENDING_APPROVAL';
+    const canSubmit = pr.status === 'DRAFT';
+    const canApprove = pr.status === 'PENDING' || pr.status === 'PENDING_APPROVAL';
     const canCreatePO = pr.status === 'APPROVED';
+
+    const handleSubmitForApproval = async () => {
+        try {
+            await updatePR({ id, data: { status: 'PENDING' as any } }).unwrap();
+            toast({
+                title: 'Success',
+                description: 'Purchase Requisition submitted for approval',
+            });
+            setIsSubmitDialogOpen(false);
+            refetch();
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error?.data?.message || 'Failed to submit for approval',
+                variant: 'destructive',
+            });
+        }
+    };
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -139,6 +162,33 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                    {canSubmit && (
+                        <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Send className="mr-2 h-4 w-4" />
+                                    Submit for Approval
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Submit for Approval</DialogTitle>
+                                    <DialogDescription>
+                                        This will submit the Purchase Requisition for approval. Once submitted, it cannot be edited until approved or rejected.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsSubmitDialogOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handleSubmitForApproval} disabled={isSubmitting}>
+                                        {isSubmitting ? 'Submitting...' : 'Submit'}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )}
+
                     {canApprove && (
                         <>
                             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
