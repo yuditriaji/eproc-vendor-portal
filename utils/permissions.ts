@@ -86,12 +86,13 @@ export function isManager(user: User | null): boolean {
 }
 
 /**
- * Check if user is an approver (enum APPROVER or RBAC Approver)
+ * Check if user can access approval pages (enum APPROVER, MANAGER, or ADMIN)
+ * MANAGER and ADMIN can also approve PRs, contracts, invoices per RBAC spec
  * @param user - The user object
- * @returns true if user is an approver
+ * @returns true if user has approval access
  */
 export function isApprover(user: User | null): boolean {
-  return hasAnyRole(user, ['APPROVER', 'Approver']);
+  return hasAnyRole(user, ['APPROVER', 'Approver', 'MANAGER', 'Manager', 'ADMIN', 'Admin']);
 }
 
 /**
