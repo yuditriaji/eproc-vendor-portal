@@ -40,11 +40,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type ContractStatusFilter = 'all' | 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'SUSPENDED';
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: typeof Play }> = {
+  DRAFT: { label: 'Draft', variant: 'secondary' as const, icon: PauseCircle },
+  PENDING_APPROVAL: { label: 'Pending', variant: 'outline' as const, icon: PauseCircle },
   ACTIVE: { label: 'Active', variant: 'default' as const, icon: Play },
+  IN_PROGRESS: { label: 'In Progress', variant: 'default' as const, icon: Play },
   COMPLETED: { label: 'Completed', variant: 'default' as const, icon: CheckCircle },
   TERMINATED: { label: 'Terminated', variant: 'destructive' as const, icon: XCircle },
   SUSPENDED: { label: 'Suspended', variant: 'outline' as const, icon: PauseCircle },
+  EXPIRED: { label: 'Expired', variant: 'destructive' as const, icon: XCircle },
+  CANCELLED: { label: 'Cancelled', variant: 'destructive' as const, icon: XCircle },
+  CLOSED: { label: 'Closed', variant: 'secondary' as const, icon: CheckCircle },
 };
 
 export default function ContractsPage() {
@@ -255,10 +261,10 @@ export default function ContractsPage() {
                   {contracts.map((contract) => {
                     const status = statusConfig[contract.status] || statusConfig.ACTIVE;
                     const StatusIcon = status.icon;
-                    const isExpiringSoon = contract.endDate && 
+                    const isExpiringSoon = contract.endDate &&
                       new Date(contract.endDate).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000 &&
                       contract.status === 'ACTIVE';
-                    
+
                     return (
                       <TableRow key={contract.id} className={isExpiringSoon ? 'bg-yellow-50 dark:bg-yellow-950/10' : ''}>
                         <TableCell className="font-medium font-mono">

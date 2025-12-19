@@ -127,23 +127,68 @@ export interface FinancialItem {
 }
 
 // Contract types
-export type ContractStatus = 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'SUSPENDED';
+export type ContractStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'ACTIVE' | 'IN_PROGRESS' | 'COMPLETED' | 'TERMINATED' | 'SUSPENDED' | 'EXPIRED' | 'CANCELLED' | 'CLOSED';
+
+export interface ContractDeliverable {
+  id?: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  dueDate?: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+}
 
 export interface Contract {
   id: string;
   title: string;
   contractNumber?: string;
-  vendorId: string;
+  description?: string;
+  vendorId?: string;
   vendorName?: string;
+  vendors?: Array<{
+    id: string;
+    name?: string;
+    companyName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+  }>;
   buyerId: string;
   buyerName?: string;
+  owner?: {
+    id: string;
+    name?: string;
+    username?: string;
+    email?: string;
+  };
   amount: number;
+  totalValue?: number;
+  value?: number;
   currency: string;
   startDate: string;
   endDate: string;
   status: ContractStatus;
+  terms?: string | Record<string, any>;
+  paymentTerms?: string;
   documents?: ContractDocument[];
   milestones?: Milestone[];
+  deliverables?: ContractDeliverable[];
+  tender?: {
+    id: string;
+    title: string;
+    referenceNumber?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+  approvedAt?: string;
+  approvedBy?: {
+    id: string;
+    name?: string;
+    username?: string;
+  };
+  closedAt?: string;
+  terminatedAt?: string;
+  terminationReason?: string;
 }
 
 export interface ContractDocument {
@@ -286,11 +331,11 @@ export interface PerformanceHistory {
 
 // Compliance types
 export type ComplianceStatus = 'VERIFIED' | 'PENDING' | 'EXPIRED' | 'REJECTED';
-export type ComplianceDocumentType = 
-  | 'BUSINESS_LICENSE' 
-  | 'TAX_CERTIFICATE' 
-  | 'INSURANCE' 
-  | 'ISO_CERTIFICATION' 
+export type ComplianceDocumentType =
+  | 'BUSINESS_LICENSE'
+  | 'TAX_CERTIFICATE'
+  | 'INSURANCE'
+  | 'ISO_CERTIFICATION'
   | 'SAFETY_CERTIFICATE'
   | 'OTHER';
 
@@ -373,11 +418,18 @@ export interface PurchaseRequisitionItem {
 
 export interface PurchaseRequisition {
   id: string;
+  prNumber?: string;
   referenceNumber: string;
   title: string;
   description?: string;
   requestorId: string;
   requestorName?: string;
+  requester?: {
+    id?: string;
+    name?: string;
+    username?: string;
+    email?: string;
+  };
   departmentId?: string;
   departmentName?: string;
   items: PurchaseRequisitionItem[];
@@ -390,12 +442,25 @@ export interface PurchaseRequisition {
   approvedByName?: string;
   approvedAt?: string;
   rejectionReason?: string;
+  contract?: {
+    id: string;
+    title?: string;
+    contractNumber?: string;
+  };
+  approvalHistory?: Array<{
+    id?: string;
+    action: string;
+    performedBy?: string;
+    performedByName?: string;
+    performedAt?: string;
+    comments?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
 
 // Purchase Order types
-export type PurchaseOrderStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_VENDOR' | 'RECEIVED' | 'CANCELLED';
+export type PurchaseOrderStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_VENDOR' | 'SENT' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED' | 'CLOSED';
 
 export interface PurchaseOrderItem {
   id: string;
@@ -409,26 +474,58 @@ export interface PurchaseOrderItem {
 
 export interface PurchaseOrder {
   id: string;
+  poNumber?: string;
   referenceNumber: string;
   purchaseRequisitionId?: string;
   purchaseRequisitionNumber?: string;
+  purchaseRequisition?: {
+    id: string;
+    prNumber?: string;
+    title?: string;
+  };
   title: string;
+  description?: string;
   vendorId: string;
   vendorName?: string;
+  vendors?: Array<{
+    id: string;
+    name?: string;
+    companyName?: string;
+    email?: string;
+    phone?: string;
+  }>;
   buyerId: string;
   buyerName?: string;
+  createdBy?: {
+    id?: string;
+    name?: string;
+    username?: string;
+  };
   items: PurchaseOrderItem[];
   totalAmount: number;
+  subtotal?: number;
+  taxAmount?: number;
   currency: string;
   deliveryDate?: string;
   deliveryAddress?: string;
   paymentTerms?: string;
+  terms?: string;
+  notes?: string;
   status: PurchaseOrderStatus;
-  approvedBy?: string;
+  approvedBy?: {
+    id?: string;
+    name?: string;
+    username?: string;
+  };
   approvedByName?: string;
   approvedAt?: string;
   sentToVendorAt?: string;
   rejectionReason?: string;
+  contract?: {
+    id: string;
+    title?: string;
+    contractNumber?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -496,33 +593,58 @@ export interface Transaction {
 }
 
 // Goods Receipt types
-export type GoodsReceiptStatus = 'DRAFT' | 'RECEIVED' | 'PARTIALLY_RECEIVED' | 'REJECTED';
+export type GoodsReceiptStatus = 'DRAFT' | 'PENDING' | 'INSPECTED' | 'ACCEPTED' | 'RECEIVED' | 'PARTIALLY_RECEIVED' | 'REJECTED' | 'PARTIAL';
 
 export interface GoodsReceiptItem {
   id: string;
-  purchaseOrderItemId: string;
-  description: string;
-  orderedQuantity: number;
-  receivedQuantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  condition?: 'GOOD' | 'DAMAGED' | 'DEFECTIVE';
+  purchaseOrderItemId?: string;
+  description?: string;
+  name?: string;
+  orderedQuantity?: number;
+  receivedQuantity?: number;
+  quantity?: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  condition?: 'GOOD' | 'ACCEPTED' | 'DAMAGED' | 'DEFECTIVE' | 'REJECTED';
   notes?: string;
+  specifications?: string;
+  serialNumber?: string;
 }
 
 export interface GoodsReceipt {
   id: string;
+  grNumber?: string;
   referenceNumber: string;
   purchaseOrderId: string;
   purchaseOrderNumber?: string;
+  purchaseOrder?: {
+    id: string;
+    poNumber?: string;
+    title?: string;
+    description?: string;
+  };
   vendorId: string;
   vendorName?: string;
   items: GoodsReceiptItem[];
-  receivedBy: string;
+  receivedItems?: GoodsReceiptItem[];
+  receivedBy?: {
+    id?: string;
+    name?: string;
+    username?: string;
+  } | string;
   receivedByName?: string;
   receivedDate: string;
   status: GoodsReceiptStatus;
   notes?: string;
+  inspectionNotes?: string;
+  inspectedBy?: {
+    id?: string;
+    name?: string;
+    username?: string;
+  } | string;
+  acceptedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -705,7 +827,7 @@ export interface BusinessDashboardStats {
   draftTenders?: number;
   publishedTenders?: number;
   closedTenders?: number;
-  
+
   // Procurement stats
   totalPRs?: number;
   pendingPRs?: number;
@@ -713,7 +835,7 @@ export interface BusinessDashboardStats {
   totalPOs?: number;
   pendingPOs?: number;
   activePOs?: number;
-  
+
   // Financial stats
   totalBudget?: number;
   allocatedBudget?: number;
@@ -722,7 +844,7 @@ export interface BusinessDashboardStats {
   pendingInvoices?: number;
   pendingPayments?: number;
   processedPayments?: number;
-  
+
   // Approval stats
   pendingApprovals?: number;
   pendingPRApprovals?: number;
@@ -730,13 +852,13 @@ export interface BusinessDashboardStats {
   pendingInvoiceApprovals?: number;
   pendingPaymentApprovals?: number;
   approvedToday?: number;
-  
+
   // Vendor stats
   totalVendors?: number;
   activeVendors?: number;
   totalContracts?: number;
   activeContracts?: number;
-  
+
   // Workflow stats
   activeWorkflows?: number;
   completedWorkflows?: number;

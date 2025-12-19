@@ -14,16 +14,16 @@ export const procurementApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Tenders'],
     }),
-    
+
     getTenderById: builder.query<ApiResponse<Tender>, string>({
       query: (id) => `tenders/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Tenders', id }],
     }),
-    
+
     // Bids
     getBids: builder.query<
       PaginatedResponse<Bid>,
-      { page?: number; pageSize?: number; status?: string }
+      { page?: number; pageSize?: number; status?: string; tenderId?: string }
     >({
       query: (params) => ({
         url: 'bids',
@@ -31,12 +31,12 @@ export const procurementApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Bids'],
     }),
-    
+
     getBidById: builder.query<ApiResponse<Bid>, string>({
       query: (id) => `bids/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Bids', id }],
     }),
-    
+
     createBid: builder.mutation<ApiResponse<Bid>, Partial<Bid>>({
       query: (data) => ({
         url: 'bids',
@@ -45,7 +45,7 @@ export const procurementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Bids'],
     }),
-    
+
     updateBid: builder.mutation<ApiResponse<Bid>, { id: string; data: Partial<Bid> }>({
       query: ({ id, data }) => ({
         url: `bids/${id}`,
@@ -54,7 +54,7 @@ export const procurementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Bids', id }],
     }),
-    
+
     submitBid: builder.mutation<ApiResponse<Bid>, string>({
       query: (id) => ({
         url: `bids/${id}/submit`,
@@ -62,19 +62,19 @@ export const procurementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, id) => [{ type: 'Bids', id }, 'Bids'],
     }),
-    
+
     // Dashboard
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
       query: () => 'dashboard/stats',
       providesTags: ['Dashboard'],
     }),
-    
+
     // Statistics
     getTenderStatistics: builder.query<ApiResponse<any>, void>({
       query: () => 'transactions/statistics/tenders',
       providesTags: ['Tenders', 'Statistics'],
     }),
-    
+
     getPurchaseOrderStatistics: builder.query<ApiResponse<any>, void>({
       query: () => 'transactions/statistics/purchase-orders',
       providesTags: ['PurchaseOrders', 'Statistics'],

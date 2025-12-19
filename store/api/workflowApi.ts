@@ -54,7 +54,7 @@ export const workflowApi = baseApi.injectEndpoints({
 
     recordGoodsReceipt: builder.mutation<ApiResponse<any>, { poId: string; data: any }>({
       query: ({ poId, data }) => ({
-        url: `workflows/procurement/record-gr/${poId}`,
+        url: `workflows/procurement/goods-receipt/${poId}`,
         method: 'POST',
         body: data,
       }),
@@ -79,6 +79,94 @@ export const workflowApi = baseApi.injectEndpoints({
       invalidatesTags: ['Workflows', 'Payments', 'Invoices', 'Budgets', 'BusinessDashboard'],
     }),
 
+    // ===== TENDER WORKFLOW =====
+    createTenderFromContract: builder.mutation<
+      ApiResponse<any>,
+      {
+        contractId: string; data: {
+          title: string;
+          description: string;
+          requirements: any;
+          criteria: any;
+          estimatedValue?: number;
+          closingDate: string;
+          category?: string;
+          department?: string;
+        }
+      }
+    >({
+      query: ({ contractId, data }) => ({
+        url: `workflows/tender/create/${contractId}`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Tenders', 'Contracts', 'Workflows', 'BusinessDashboard'],
+    }),
+
+    closeTender: builder.mutation<ApiResponse<any>, { tenderId: string }>({
+      query: ({ tenderId }) => ({
+        url: `workflows/tender/close/${tenderId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Tenders', 'Workflows', 'BusinessDashboard'],
+    }),
+
+    awardTenderWorkflow: builder.mutation<
+      ApiResponse<any>,
+      { tenderId: string; winningBidId: string }
+    >({
+      query: ({ tenderId, winningBidId }) => ({
+        url: `workflows/tender/award/${tenderId}/${winningBidId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Tenders', 'Bids', 'Contracts', 'Workflows', 'BusinessDashboard'],
+    }),
+
+    evaluateBidWorkflow: builder.mutation<
+      ApiResponse<any>,
+      { bidId: string; evaluation: { technicalScore: number; commercialScore: number; evaluationNotes?: string } }
+    >({
+      query: ({ bidId, evaluation }) => ({
+        url: `workflows/tender/evaluate-bid/${bidId}`,
+        method: 'POST',
+        body: evaluation,
+      }),
+      invalidatesTags: ['Bids', 'Workflows', 'BusinessDashboard'],
+    }),
+
+    submitBidWorkflow: builder.mutation<
+      ApiResponse<any>,
+      { tenderId: string; bidData: any }
+    >({
+      query: ({ tenderId, bidData }) => ({
+        url: `workflows/tender/submit-bid/${tenderId}`,
+        method: 'POST',
+        body: bidData,
+      }),
+      invalidatesTags: ['Bids', 'Tenders', 'Workflows'],
+    }),
+
+    // ===== QUOTATION WORKFLOW =====
+    acceptQuotation: builder.mutation<
+      ApiResponse<any>,
+      { quotationId: string; contractDetails?: any }
+    >({
+      query: ({ quotationId, contractDetails }) => ({
+        url: `workflows/quotation/accept/${quotationId}`,
+        method: 'POST',
+        body: contractDetails,
+      }),
+      invalidatesTags: ['Contracts', 'Workflows', 'BusinessDashboard'],
+    }),
+
+    // ===== WORKFLOW STATUS =====
+    getWorkflowStatus: builder.query<
+      ApiResponse<any>,
+      { entityType: string; entityId: string }
+    >({
+      query: ({ entityType, entityId }) => `workflows/status/${entityType}/${entityId}`,
+      providesTags: ['Workflows'],
+    }),
     getWorkflows: builder.query<
       PaginatedResponse<Workflow>,
       { page?: number; pageSize?: number; status?: string; type?: string }
@@ -199,6 +287,19 @@ export const {
   useGetWorkflowByIdQuery,
   useCancelWorkflowMutation,
 
+  // Tender Workflow
+  useCreateTenderFromContractMutation,
+  useCloseTenderMutation,
+  useAwardTenderWorkflowMutation,
+  useEvaluateBidWorkflowMutation,
+  useSubmitBidWorkflowMutation,
+
+  // Quotation Workflow
+  useAcceptQuotationMutation,
+
+  // Workflow Status
+  useGetWorkflowStatusQuery,
+
   // Approval Management
   useGetApprovalRequestsQuery,
   useGetApprovalRequestByIdQuery,
@@ -209,3 +310,4 @@ export const {
   useGetApprovalStatisticsQuery,
   useGetWorkflowStatisticsQuery,
 } = workflowApi;
+

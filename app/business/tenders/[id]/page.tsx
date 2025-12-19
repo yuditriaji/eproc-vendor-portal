@@ -3,13 +3,17 @@
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useGetTenderByIdQuery } from '@/store/api/procurementApi';
+import { useGetTenderByIdQuery, useGetBidsQuery } from '@/store/api/procurementApi';
 import { usePublishTenderMutation, useAwardTenderMutation } from '@/store/api/businessApi';
+import { useCloseTenderMutation } from '@/store/api/workflowApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Send, Award as AwardIcon, Calendar, DollarSign, MapPin, Tag, FileText } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, Send, Award as AwardIcon, Calendar, DollarSign, MapPin, Tag, FileText, XCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -27,10 +31,15 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
   const router = useRouter();
   const { toast } = useToast();
   const [showAwardDialog, setShowAwardDialog] = useState(false);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [selectedBidId, setSelectedBidId] = useState('');
+  const [awardReason, setAwardReason] = useState('');
 
   const { data: tenderResponse, isLoading } = useGetTenderByIdQuery(id);
+  const { data: bidsResponse } = useGetBidsQuery({ tenderId: id, status: 'SUBMITTED' });
   const [publishTender, { isLoading: isPublishing }] = usePublishTenderMutation();
   const [awardTender, { isLoading: isAwarding }] = useAwardTenderMutation();
+  const [closeTender, { isLoading: isClosing }] = useCloseTenderMutation();
 
   const tender = tenderResponse?.data;
 
@@ -50,15 +59,41 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  const handleAward = async () => {
+  const handleClose = async () => {
     try {
-      // In real implementation, this would include bidId and reason
-      await awardTender({ id, bidId: 'selected-bid-id', reason: 'Best offer' }).unwrap();
+      await closeTender({ tenderId: id }).unwrap();
+      toast({
+        title: 'Success',
+        description: 'Tender closed for bidding',
+      });
+      setShowCloseDialog(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to close tender',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAward = async () => {
+    if (!selectedBidId) {
+      toast({
+        title: 'Error',
+        description: 'Please select a bid to award',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      await awardTender({ id, bidId: selectedBidId, reason: awardReason }).unwrap();
       toast({
         title: 'Success',
         description: 'Tender awarded successfully',
       });
       setShowAwardDialog(false);
+      setSelectedBidId('');
+      setAwardReason('');
       router.push('/business/tenders');
     } catch (error: any) {
       toast({
@@ -94,7 +129,9 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
 
   const status = statusConfig[tender.status] || statusConfig.DRAFT;
   const canPublish = tender.status === 'DRAFT';
-  const canAward = tender.status === 'PUBLISHED' || tender.status === 'CLOSED';
+  const canClose = tender.status === 'PUBLISHED';
+  const canAward = tender.status === 'CLOSED';
+  const bids = bidsResponse?.data || [];
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -126,6 +163,32 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
               Publish
             </Button>
           )}
+          {canClose && (
+            <Dialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Close Tender
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Close Tender for Bidding</DialogTitle>
+                  <DialogDescription>
+                    This will close the tender to new bid submissions. You can then evaluate and award the tender.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowCloseDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleClose} disabled={isClosing}>
+                    Close Tender
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
           {canAward && (
             <Dialog open={showAwardDialog} onOpenChange={setShowAwardDialog}>
               <DialogTrigger asChild>
@@ -134,7 +197,7 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
                   Award Tender
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg">
                 <DialogHeader>
                   <DialogTitle>Award Tender</DialogTitle>
                   <DialogDescription>
@@ -142,19 +205,60 @@ export default function TenderDetailPage({ params }: { params: Promise<{ id: str
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <p className="text-sm text-muted-foreground">
-                    Award functionality will show bid selection here
-                  </p>
-                  <Button onClick={handleAward} disabled={isAwarding} className="w-full">
-                    Confirm Award
-                  </Button>
+                  {bids.length > 0 ? (
+                    <RadioGroup value={selectedBidId} onValueChange={setSelectedBidId}>
+                      {bids.map((bid: any) => (
+                        <div key={bid.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent">
+                          <RadioGroupItem value={bid.id} id={bid.id} />
+                          <Label htmlFor={bid.id} className="flex-1 cursor-pointer">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{bid.vendor?.name || bid.vendor?.username || 'Vendor'}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Score: {bid.totalScore || 'N/A'}
+                                </p>
+                              </div>
+                              {bid.bidAmount && (
+                                <p className="font-semibold">
+                                  {bid.bidAmount.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No bids available for this tender
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="award-reason">Award Reason (Optional)</Label>
+                    <Textarea
+                      id="award-reason"
+                      placeholder="Reason for selecting this bid..."
+                      value={awardReason}
+                      onChange={(e) => setAwardReason(e.target.value)}
+                    />
+                  </div>
                 </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowAwardDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAward} disabled={isAwarding || !selectedBidId}>
+                    Award Tender
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           )}
-          <Button variant="outline" asChild>
-            <Link href={`/business/tenders/${id}/edit`}>Edit</Link>
-          </Button>
+          {tender.status === 'DRAFT' && (
+            <Button variant="outline" asChild>
+              <Link href={`/business/tenders/${id}/edit`}>Edit</Link>
+            </Button>
+          )}
         </div>
       </div>
 

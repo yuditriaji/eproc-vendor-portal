@@ -41,14 +41,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type POStatusFilter = 'all' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_VENDOR' | 'RECEIVED' | 'CANCELLED';
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: typeof ShoppingCart }> = {
   DRAFT: { label: 'Draft', variant: 'secondary' as const, icon: ShoppingCart },
   PENDING_APPROVAL: { label: 'Pending Approval', variant: 'default' as const, icon: Clock },
   APPROVED: { label: 'Approved', variant: 'default' as const, icon: CheckCircle },
   REJECTED: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle },
   SENT_TO_VENDOR: { label: 'Sent to Vendor', variant: 'default' as const, icon: Send },
+  SENT: { label: 'Sent', variant: 'default' as const, icon: Send },
+  PARTIALLY_RECEIVED: { label: 'Partially Received', variant: 'outline' as const, icon: Package },
   RECEIVED: { label: 'Received', variant: 'default' as const, icon: Package },
   CANCELLED: { label: 'Cancelled', variant: 'outline' as const, icon: XCircle },
+  CLOSED: { label: 'Closed', variant: 'secondary' as const, icon: CheckCircle },
 };
 
 export default function PurchaseOrdersPage() {

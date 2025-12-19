@@ -71,7 +71,7 @@ export const financeApi = baseApi.injectEndpoints({
     >({
       query: ({ id, approved, reason }) => ({
         url: `invoices/${id}/approve`,
-        method: 'POST',
+        method: 'PATCH',
         body: { approved, reason },
       }),
       invalidatesTags: (_result, _error, { id }) => [
