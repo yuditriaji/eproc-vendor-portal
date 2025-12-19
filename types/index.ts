@@ -864,6 +864,85 @@ export interface BusinessDashboardStats {
   completedWorkflows?: number;
 }
 
+// ============================================================================
+// RFQ (Request for Quotation) Types - P2P Standard Workflow
+// ============================================================================
+
+export type RFQStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'AWARDED' | 'CANCELLED';
+export type SourcingType = 'NONE' | 'RFQ' | 'TENDER' | 'DIRECT';
+export type ContractSourceType = 'MANUAL' | 'TENDER_AWARD' | 'QUOTATION_ACCEPT';
+
+export interface RFQItem {
+  name: string;
+  quantity: number;
+  unit?: string;
+  description?: string;
+  specifications?: Record<string, any>;
+}
+
+export interface RFQ {
+  id: string;
+  tenantId: string;
+  rfqNumber: string;
+  prId?: string;
+  title: string;
+  description?: string;
+  items: RFQItem[];
+  estimatedAmount?: number;
+  validUntil?: string;
+  targetVendorIds?: string[];
+  category?: string;
+  department?: string;
+  status: RFQStatus;
+  publishedAt?: string;
+  closedAt?: string;
+  awardedQuotationId?: string;
+  awardedContractId?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  // Relations
+  purchaseRequisition?: PurchaseRequisition;
+  creator?: {
+    id: string;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  quotations?: Quotation[];
+}
+
+export interface CreateRFQDto {
+  prId?: string;
+  title: string;
+  description?: string;
+  items: RFQItem[];
+  estimatedAmount?: number;
+  validUntil?: string;
+  targetVendorIds?: string[];
+  category?: string;
+  department?: string;
+}
+
+export interface UpdateRFQDto {
+  title?: string;
+  description?: string;
+  items?: RFQItem[];
+  estimatedAmount?: number;
+  validUntil?: string;
+  targetVendorIds?: string[];
+  category?: string;
+  department?: string;
+}
+
+// P2P Workflow Step Result
+export interface WorkflowStepResult {
+  success: boolean;
+  message: string;
+  nextSteps?: string[];
+  data?: any;
+}
+
 // Form types
 export interface FormState {
   isSubmitting: boolean;
