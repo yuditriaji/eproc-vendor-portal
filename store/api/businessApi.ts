@@ -293,6 +293,11 @@ export const businessApi = baseApi.injectEndpoints({
       providesTags: ['Vendors'],
     }),
 
+    getVendorPerformanceStats: builder.query<any, void>({
+      query: () => 'vendors/performance',
+      providesTags: ['Vendors'],
+    }),
+
     getVendorById: builder.query<ApiResponse<Vendor>, string>({
       query: (id) => `vendors/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Vendors', id }],
@@ -417,7 +422,7 @@ export const businessApi = baseApi.injectEndpoints({
 export const {
   // Dashboard
   useGetBusinessDashboardStatsQuery,
-  
+
   // Purchase Requisitions
   useGetPurchaseRequisitionsQuery,
   useGetPurchaseRequisitionByIdQuery,
@@ -425,7 +430,7 @@ export const {
   useUpdatePurchaseRequisitionMutation,
   useDeletePurchaseRequisitionMutation,
   useGetPendingPRApprovalsQuery,
-  
+
   // Purchase Orders
   useGetPurchaseOrdersQuery,
   useGetPurchaseOrderByIdQuery,
@@ -435,7 +440,7 @@ export const {
   useApprovePurchaseOrderMutation,
   useGetPendingPOApprovalsQuery,
   useAssignVendorToPOMutation,
-  
+
   // Contracts
   useGetContractsQuery,
   useGetContractByIdQuery,
@@ -444,25 +449,25 @@ export const {
   useUpdateContractStatusMutation,
   useCloseContractMutation,
   useTerminateContractMutation,
-  
+
   // Goods Receipts
   useGetGoodsReceiptsQuery,
   useGetGoodsReceiptByIdQuery,
   useCreateGoodsReceiptMutation,
-  
+
   // Vendors
   useGetVendorsQuery,
   useGetVendorByIdQuery,
   useUpdateVendorStatusMutation,
   useBlacklistVendorMutation,
-  useGetVendorPerformanceQuery,
-  
+  useGetVendorPerformanceStatsQuery,
+
   // Tenders
   useCreateTenderMutation,
   useUpdateTenderMutation,
   usePublishTenderMutation,
   useAwardTenderMutation,
-  
+
   // Bids
   useGetBidsQuery,
   useGetBidByIdQuery,
