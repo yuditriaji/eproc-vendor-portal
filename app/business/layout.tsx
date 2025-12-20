@@ -39,13 +39,27 @@ export default function BusinessLayout({
     pathname?.startsWith('/business/register');
 
   // Fetch pending approvals count for badge (only for approvers)
-  // IMPORTANT: This hook must be called before any conditional returns
+  // IMPORTANT: All hooks must be called before any conditional returns
   const canViewApprovals = isApprover(user);
   const { data: pendingApprovalsData } = useGetMyPendingApprovalsQuery(
     { page: 1, pageSize: 1 },
     { skip: !canViewApprovals || !isAuthenticated || isAuthPage }
   );
   const pendingCount = pendingApprovalsData?.meta?.total || 0;
+
+  // Get role-based navigation and update with dynamic badge count
+  const baseNavigation = getBusinessNavigation(user);
+  const navigation = useMemo(() => {
+    return baseNavigation.map(section => ({
+      ...section,
+      items: section.items.map(item => {
+        if (item.id === 'approvals' && pendingCount > 0) {
+          return { ...item, badge: pendingCount };
+        }
+        return item;
+      })
+    }));
+  }, [baseNavigation, pendingCount]);
 
   // RBAC: Check if user is a business user (not VENDOR, not ADMIN)
   useEffect(() => {
@@ -85,21 +99,7 @@ export default function BusinessLayout({
     return null;
   }
 
-  // Get role-based navigation
-  const baseNavigation = getBusinessNavigation(user);
 
-  // Update navigation with dynamic badge count
-  const navigation = useMemo(() => {
-    return baseNavigation.map(section => ({
-      ...section,
-      items: section.items.map(item => {
-        if (item.id === 'approvals' && pendingCount > 0) {
-          return { ...item, badge: pendingCount };
-        }
-        return item;
-      })
-    }));
-  }, [baseNavigation, pendingCount]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
