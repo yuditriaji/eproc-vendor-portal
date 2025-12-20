@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { 
+import {
   useGetMyPendingApprovalsQuery,
   useApproveRequestMutation,
 } from '@/store/api/workflowApi';
@@ -124,7 +124,7 @@ export default function ApprovalsPage() {
 
     try {
       const isApproving = actionType === 'approve';
-      
+
       if (!isApproving && !comments) {
         toast({
           title: 'Rejection reason required',
@@ -139,13 +139,13 @@ export default function ApprovalsPage() {
         approved: isApproving,
         comments: comments || undefined,
       }).unwrap();
-      
+
       toast({
         title: isApproving ? 'Approved' : 'Rejected',
         description: `${selectedApproval.title} has been ${isApproving ? 'approved successfully' : 'rejected'}.`,
         variant: isApproving ? 'default' : 'destructive',
       });
-      
+
       handleCloseDialog();
     } catch (error: any) {
       toast({
@@ -340,11 +340,21 @@ export default function ApprovalsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {approvals.map((approval) => {
-                    const typeInfo = typeConfig[approval.type] || typeConfig.PURCHASE_REQUISITION;
+                  {approvals.map((approval: any) => {
+                    const typeInfo = typeConfig.PURCHASE_REQUISITION; // These are all PRs now
                     const TypeIcon = typeInfo.icon;
-                    const priority = priorityConfig[approval.priority || 'MEDIUM'];
-                    const isOverdue = approval.dueDate && new Date(approval.dueDate) < new Date();
+                    const priorityKey = (approval.priority || 'MEDIUM') as keyof typeof priorityConfig;
+                    const priority = priorityConfig[priorityKey] || priorityConfig.MEDIUM;
+                    const isOverdue = approval.requiredBy && new Date(approval.requiredBy) < new Date();
+                    // Map PR fields to expected format
+                    const entityNumber = approval.prNumber || '-';
+                    const requestedByName = approval.requester
+                      ? `${approval.requester.firstName || ''} ${approval.requester.lastName || ''}`.trim() || approval.requester.username || approval.requester.email
+                      : 'N/A';
+                    const calculatedAmount = approval.items && Array.isArray(approval.items)
+                      ? approval.items.reduce((sum: number, item: any) => sum + ((item.quantity || 0) * (item.unitPrice || 0)), 0)
+                      : 0;
+                    const amount = approval.estimatedAmount || approval.totalAmount || calculatedAmount;
                     return (
                       <TableRow key={approval.id} className={isOverdue ? 'bg-red-50 dark:bg-red-950/20' : ''}>
                         <TableCell>
@@ -362,15 +372,15 @@ export default function ApprovalsPage() {
                           )}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
-                          {approval.entityNumber}
+                          {entityNumber}
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{approval.requestedByName || 'N/A'}</span>
+                          <span className="text-sm">{requestedByName}</span>
                         </TableCell>
                         <TableCell>
-                          {approval.amount && approval.currency ? (
+                          {amount > 0 ? (
                             <span className="font-semibold">
-                              {formatCurrency(approval.amount, approval.currency)}
+                              {formatCurrency(amount, approval.currency || 'USD')}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">N/A</span>
@@ -382,9 +392,9 @@ export default function ApprovalsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {approval.dueDate ? (
+                          {approval.requiredBy ? (
                             <span className={`text-sm ${isOverdue ? 'font-semibold text-red-600' : ''}`}>
-                              {formatDate(approval.dueDate)}
+                              {formatDate(approval.requiredBy)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground text-sm">No due date</span>
@@ -393,21 +403,21 @@ export default function ApprovalsPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/business/approvals/${approval.id}`}>
+                              <Link href={`/business/requisitions/${approval.id}`}>
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="text-green-600"
                               onClick={() => handleOpenDialog(approval, 'approve')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="text-red-600"
                               onClick={() => handleOpenDialog(approval, 'reject')}
                             >

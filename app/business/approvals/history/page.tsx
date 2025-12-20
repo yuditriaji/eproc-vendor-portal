@@ -235,18 +235,29 @@ export default function ApprovalHistoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Action</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>PR Number</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Requester</TableHead>
                     <TableHead>Approver</TableHead>
-                    <TableHead>Request ID</TableHead>
-                    <TableHead>Comments</TableHead>
                     <TableHead>Decision Date</TableHead>
                     <TableHead className="text-right">View</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {history.map((record) => {
-                    const action = actionConfig[record.action] || actionConfig.APPROVE;
+                  {history.map((record: any) => {
+                    // Map PR status to action
+                    const isApproved = record.status === 'APPROVED';
+                    const action = isApproved ? actionConfig.APPROVE : actionConfig.REJECT;
                     const ActionIcon = action.icon;
+                    // Map requester name
+                    const requesterName = record.requester
+                      ? `${record.requester.firstName || ''} ${record.requester.lastName || ''}`.trim() || record.requester.username
+                      : 'N/A';
+                    // Map approver name
+                    const approverName = record.approver
+                      ? `${record.approver.firstName || ''} ${record.approver.lastName || ''}`.trim() || record.approver.username
+                      : 'N/A';
                     return (
                       <TableRow key={record.id}>
                         <TableCell>
@@ -255,28 +266,24 @@ export default function ApprovalHistoryPage() {
                             {action.label}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div className="font-medium">{record.approverName}</div>
-                            <div className="text-xs text-muted-foreground">{record.approverRole}</div>
-                          </div>
-                        </TableCell>
                         <TableCell className="font-mono text-sm">
-                          {record.approvalRequestId}
+                          {record.prNumber || '-'}
                         </TableCell>
                         <TableCell className="max-w-xs">
-                          {record.comments ? (
-                            <div className="text-sm truncate">{record.comments}</div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">No comments</span>
-                          )}
+                          <div className="text-sm font-medium truncate">{record.title}</div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{formatDate(record.performedAt)}</span>
+                          <span className="text-sm">{requesterName}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{approverName}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{record.approvedAt ? formatDate(record.approvedAt) : 'N/A'}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/business/approvals/${record.approvalRequestId}`}>
+                            <Link href={`/business/requisitions/${record.id}`}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
