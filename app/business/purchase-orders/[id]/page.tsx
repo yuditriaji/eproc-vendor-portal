@@ -383,10 +383,10 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                                         </TableCell>
                                         <TableCell className="text-right">{item.quantity} {item.unit || ''}</TableCell>
                                         <TableCell className="text-right">
-                                            {formatCurrency(item.unitPrice || 0, po.currency)}
+                                            {formatCurrency(item.unitPrice || 0, po.currency?.code || 'USD')}
                                         </TableCell>
                                         <TableCell className="text-right font-semibold">
-                                            {formatCurrency(item.totalPrice || (item.quantity * item.unitPrice) || 0, po.currency)}
+                                            {formatCurrency(item.totalPrice || item.amount || (item.quantity * item.unitPrice) || 0, po.currency?.code || 'USD')}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -401,13 +401,13 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                             {po.subtotal && (
                                 <div className="flex items-center justify-between">
                                     <span>Subtotal:</span>
-                                    <span className="font-semibold">{formatCurrency(po.subtotal, po.currency)}</span>
+                                    <span className="font-semibold">{formatCurrency(po.subtotal, po.currency?.code || 'USD')}</span>
                                 </div>
                             )}
                             {po.taxAmount && (
                                 <div className="flex items-center justify-between">
                                     <span>Tax:</span>
-                                    <span className="font-semibold">{formatCurrency(po.taxAmount, po.currency)}</span>
+                                    <span className="font-semibold">{formatCurrency(po.taxAmount, po.currency?.code || 'USD')}</span>
                                 </div>
                             )}
                             <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
