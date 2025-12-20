@@ -281,7 +281,14 @@ export default function PurchaseRequisitionsPage() {
                         <TableCell>{requesterName}</TableCell>
                         <TableCell>{pr.department || 'N/A'}</TableCell>
                         <TableCell>
-                          {formatCurrency(pr.estimatedAmount || pr.totalAmount || 0, pr.currency || 'USD')}
+                          {(() => {
+                            // Calculate total from items if estimatedAmount is not set
+                            const calculatedTotal = pr.items && Array.isArray(pr.items)
+                              ? pr.items.reduce((sum: number, item: any) => sum + ((item.quantity || 0) * (item.unitPrice || 0)), 0)
+                              : 0;
+                            const displayTotal = pr.estimatedAmount || pr.totalAmount || calculatedTotal;
+                            return formatCurrency(displayTotal, pr.currency || 'USD');
+                          })()}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">{formatDate(pr.createdAt)}</span>
