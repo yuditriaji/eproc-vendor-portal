@@ -230,7 +230,8 @@ export const workflowApi = baseApi.injectEndpoints({
       { id: string; approved: boolean; comments?: string }
     >({
       query: ({ id, approved, comments }) => ({
-        url: `approvals/${id}/approve`,
+        // Use the PR approve endpoint
+        url: `purchase-requisitions/${id}/approve`,
         method: 'POST',
         body: { approved, comments },
       }),
