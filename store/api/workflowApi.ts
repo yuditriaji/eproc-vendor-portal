@@ -218,7 +218,8 @@ export const workflowApi = baseApi.injectEndpoints({
       { page?: number; pageSize?: number; type?: string; priority?: string; search?: string }
     >({
       query: (params) => ({
-        url: 'approvals/my-pending',
+        // Use the existing PR pending approvals endpoint
+        url: 'purchase-requisitions/pending/approvals',
         params,
       }),
       providesTags: ['Approvals'],
@@ -250,7 +251,8 @@ export const workflowApi = baseApi.injectEndpoints({
       { page?: number; pageSize?: number; approverId?: string; type?: string; action?: string; search?: string }
     >({
       query: (params) => ({
-        url: 'approvals/history',
+        // Use the existing PR approval history endpoint
+        url: 'purchase-requisitions/approval-history',
         params,
       }),
       providesTags: ['Approvals'],
