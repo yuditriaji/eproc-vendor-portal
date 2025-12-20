@@ -38,6 +38,15 @@ export default function BusinessLayout({
   const isAuthPage = pathname?.startsWith('/business/login') ||
     pathname?.startsWith('/business/register');
 
+  // Fetch pending approvals count for badge (only for approvers)
+  // IMPORTANT: This hook must be called before any conditional returns
+  const canViewApprovals = isApprover(user);
+  const { data: pendingApprovalsData } = useGetMyPendingApprovalsQuery(
+    { page: 1, pageSize: 1 },
+    { skip: !canViewApprovals || !isAuthenticated || isAuthPage }
+  );
+  const pendingCount = pendingApprovalsData?.meta?.total || 0;
+
   // RBAC: Check if user is a business user (not VENDOR, not ADMIN)
   useEffect(() => {
     if (!isAuthenticated && !isAuthPage) {
@@ -78,14 +87,6 @@ export default function BusinessLayout({
 
   // Get role-based navigation
   const baseNavigation = getBusinessNavigation(user);
-
-  // Fetch pending approvals count for badge (only for approvers)
-  const canViewApprovals = isApprover(user);
-  const { data: pendingApprovalsData } = useGetMyPendingApprovalsQuery(
-    { page: 1, pageSize: 1 },
-    { skip: !canViewApprovals }
-  );
-  const pendingCount = pendingApprovalsData?.meta?.total || 0;
 
   // Update navigation with dynamic badge count
   const navigation = useMemo(() => {
