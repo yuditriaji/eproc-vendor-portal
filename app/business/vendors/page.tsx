@@ -217,19 +217,18 @@ export default function VendorsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Company</TableHead>
-                    <TableHead>Contact Person</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
-                    <TableHead>Category</TableHead>
+                    <TableHead>Business Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vendors.map((vendor) => {
+                  {vendors.map((vendor: any) => {
                     const status = statusConfig[vendor.status as keyof typeof statusConfig] || statusConfig.ACTIVE;
                     const StatusIcon = status.icon;
-                    
+
                     return (
                       <TableRow key={vendor.id}>
                         <TableCell className="font-medium">
@@ -242,11 +241,10 @@ export default function VendorsPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{vendor.contactPerson || 'N/A'}</TableCell>
-                        <TableCell className="text-sm">{vendor.email || 'N/A'}</TableCell>
-                        <TableCell className="text-sm">{vendor.phone || 'N/A'}</TableCell>
+                        <TableCell className="text-sm">{vendor.contactEmail || 'N/A'}</TableCell>
+                        <TableCell className="text-sm">{vendor.contactPhone || 'N/A'}</TableCell>
                         <TableCell>
-                          {vendor.category || (
+                          {vendor.businessType || (
                             <span className="text-muted-foreground">N/A</span>
                           )}
                         </TableCell>
