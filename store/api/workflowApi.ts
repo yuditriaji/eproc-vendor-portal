@@ -217,24 +217,44 @@ export const workflowApi = baseApi.injectEndpoints({
       PaginatedResponse<ApprovalRequest>,
       { page?: number; pageSize?: number; type?: string; priority?: string; search?: string }
     >({
-      query: (params) => ({
-        // Use the existing PR pending approvals endpoint
-        url: 'purchase-requisitions/pending/approvals',
-        params,
-      }),
+      query: (params) => {
+        // Call different endpoints based on type filter
+        const { type, ...otherParams } = params;
+        if (type === 'PURCHASE_ORDER') {
+          return {
+            url: 'purchase-orders/pending/approvals',
+            params: otherParams,
+          };
+        }
+        // Default to PR pending approvals for PURCHASE_REQUISITION or other types
+        return {
+          url: 'purchase-requisitions/pending/approvals',
+          params: { ...otherParams, type },
+        };
+      },
       providesTags: ['Approvals'],
     }),
 
     approveRequest: builder.mutation<
       ApiResponse<ApprovalRequest>,
-      { id: string; approved: boolean; comments?: string }
+      { id: string; approved: boolean; comments?: string; type?: string }
     >({
-      query: ({ id, approved, comments }) => ({
-        // Use the PR approve endpoint
-        url: `purchase-requisitions/${id}/approve`,
-        method: 'POST',
-        body: { approved, comments },
-      }),
+      query: ({ id, approved, comments, type }) => {
+        // Call different endpoints based on type
+        if (type === 'PURCHASE_ORDER') {
+          return {
+            url: `purchase-orders/${id}/approve`,
+            method: 'POST',
+            body: { approved, reason: comments },
+          };
+        }
+        // Default to PR approve endpoint
+        return {
+          url: `purchase-requisitions/${id}/approve`,
+          method: 'POST',
+          body: { approved, comments },
+        };
+      },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'Approvals', id },
         'Approvals',

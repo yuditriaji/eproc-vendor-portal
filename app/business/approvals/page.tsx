@@ -138,6 +138,7 @@ export default function ApprovalsPage() {
         id: selectedApproval.id,
         approved: isApproving,
         comments: comments || undefined,
+        type: selectedApproval.type, // Pass type so it knows which endpoint to call
       }).unwrap();
 
       toast({
