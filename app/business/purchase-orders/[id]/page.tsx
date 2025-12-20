@@ -506,7 +506,32 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                         <CardTitle>Terms and Conditions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground whitespace-pre-wrap">{po.terms}</p>
+                        <div className="space-y-3">
+                            {typeof po.terms === 'string' ? (
+                                <p className="text-muted-foreground whitespace-pre-wrap">{po.terms}</p>
+                            ) : (
+                                <>
+                                    {po.terms.paymentTerms && (
+                                        <div>
+                                            <span className="text-sm font-medium">Payment Terms:</span>
+                                            <p className="text-muted-foreground">{po.terms.paymentTerms}</p>
+                                        </div>
+                                    )}
+                                    {po.terms.deliveryAddress && (
+                                        <div>
+                                            <span className="text-sm font-medium">Delivery Address:</span>
+                                            <p className="text-muted-foreground">{po.terms.deliveryAddress}</p>
+                                        </div>
+                                    )}
+                                    {po.terms.notes && (
+                                        <div>
+                                            <span className="text-sm font-medium">Notes:</span>
+                                            <p className="text-muted-foreground">{po.terms.notes}</p>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             )}
