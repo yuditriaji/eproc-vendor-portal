@@ -259,10 +259,14 @@ export default function PurchaseRequisitionsPage() {
                   {prs.map((pr) => {
                     const status = statusConfig[pr.status] || statusConfig.DRAFT;
                     const StatusIcon = status.icon;
+                    // Extract requester name from User object
+                    const requesterName = pr.requester
+                      ? `${pr.requester.firstName || ''} ${pr.requester.lastName || ''}`.trim() || pr.requester.username || pr.requester.email
+                      : 'N/A';
                     return (
                       <TableRow key={pr.id}>
                         <TableCell className="font-medium">
-                          {pr.referenceNumber}
+                          {pr.prNumber || pr.referenceNumber || '-'}
                         </TableCell>
                         <TableCell>
                           <div>
@@ -274,10 +278,10 @@ export default function PurchaseRequisitionsPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{pr.requestorName || 'N/A'}</TableCell>
-                        <TableCell>{pr.departmentName || 'N/A'}</TableCell>
+                        <TableCell>{requesterName}</TableCell>
+                        <TableCell>{pr.department || 'N/A'}</TableCell>
                         <TableCell>
-                          {formatCurrency(pr.totalAmount, pr.currency)}
+                          {formatCurrency(pr.estimatedAmount || pr.totalAmount || 0, pr.currency || 'USD')}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">{formatDate(pr.createdAt)}</span>

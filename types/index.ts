@@ -419,24 +419,32 @@ export interface PurchaseRequisitionItem {
 export interface PurchaseRequisition {
   id: string;
   prNumber?: string;
-  referenceNumber: string;
+  referenceNumber?: string; // Legacy field
   title: string;
   description?: string;
-  requestorId: string;
+  requestorId?: string;
+  requesterId?: string;
   requestorName?: string;
   requester?: {
     id?: string;
     name?: string;
+    firstName?: string;
+    lastName?: string;
     username?: string;
     email?: string;
   };
   departmentId?: string;
   departmentName?: string;
-  items: PurchaseRequisitionItem[];
-  totalAmount: number;
-  currency: string;
+  department?: string; // Direct department field from backend
+  items: PurchaseRequisitionItem[] | any[];
+  totalAmount?: number;
+  estimatedAmount?: number; // Backend field
+  currency?: string;
   requiredDate?: string;
+  requiredBy?: string; // Backend field
   justification?: string;
+  priority?: string;
+  notes?: string;
   status: PurchaseRequisitionStatus;
   approvedBy?: string;
   approvedByName?: string;
