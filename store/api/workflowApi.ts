@@ -271,11 +271,21 @@ export const workflowApi = baseApi.injectEndpoints({
       PaginatedResponse<ApprovalHistory>,
       { page?: number; pageSize?: number; approverId?: string; type?: string; action?: string; search?: string }
     >({
-      query: (params) => ({
-        // Use the existing PR approval history endpoint
-        url: 'purchase-requisitions/approval-history',
-        params,
-      }),
+      query: (params) => {
+        // Call different endpoints based on type filter
+        const { type, ...otherParams } = params;
+        if (type === 'PURCHASE_ORDER') {
+          return {
+            url: 'purchase-orders/approval-history',
+            params: otherParams,
+          };
+        }
+        // Default to PR approval history
+        return {
+          url: 'purchase-requisitions/approval-history',
+          params: { ...otherParams, type },
+        };
+      },
       providesTags: ['Approvals'],
     }),
 
