@@ -132,7 +132,7 @@ export function getBusinessNavigation(user: User | null): BusinessNavSection[] {
           label: 'Pending Approvals',
           icon: CheckSquare,
           href: '/business/approvals',
-          badge: 5,
+          // Badge will be set dynamically in layout
           badgeVariant: 'destructive',
         },
         {

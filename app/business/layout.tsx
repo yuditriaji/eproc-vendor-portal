@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { cn } from '@/lib/utils';
-import { isBusinessUser } from '@/utils/permissions';
+import { isBusinessUser, isApprover } from '@/utils/permissions';
 import { getBusinessNavigation, businessBottomNavigation, getRoleDisplayName, getRoleBadgeColor } from '@/config/business-navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Menu, 
-  ChevronLeft, 
+import {
+  Menu,
+  ChevronLeft,
   ChevronRight,
   User as UserIcon,
   LogOut,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useLogoutMutation } from '@/store/api/authApi';
+import { useGetMyPendingApprovalsQuery } from '@/store/api/workflowApi';
 
 export default function BusinessLayout({
   children,
@@ -34,8 +35,8 @@ export default function BusinessLayout({
   const [logout] = useLogoutMutation();
 
   // Don't apply layout to auth pages
-  const isAuthPage = pathname?.startsWith('/business/login') || 
-                     pathname?.startsWith('/business/register');
+  const isAuthPage = pathname?.startsWith('/business/login') ||
+    pathname?.startsWith('/business/register');
 
   // RBAC: Check if user is a business user (not VENDOR, not ADMIN)
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function BusinessLayout({
       router.push('/business/login'); // Redirect to business login
       return;
     }
-    
+
     // Check if authenticated user is a business user
     if (isAuthenticated && !isAuthPage && !isBusinessUser(user)) {
       // If VENDOR, redirect to vendor portal
@@ -76,7 +77,28 @@ export default function BusinessLayout({
   }
 
   // Get role-based navigation
-  const navigation = getBusinessNavigation(user);
+  const baseNavigation = getBusinessNavigation(user);
+
+  // Fetch pending approvals count for badge (only for approvers)
+  const canViewApprovals = isApprover(user);
+  const { data: pendingApprovalsData } = useGetMyPendingApprovalsQuery(
+    { page: 1, pageSize: 1 },
+    { skip: !canViewApprovals }
+  );
+  const pendingCount = pendingApprovalsData?.meta?.total || 0;
+
+  // Update navigation with dynamic badge count
+  const navigation = useMemo(() => {
+    return baseNavigation.map(section => ({
+      ...section,
+      items: section.items.map(item => {
+        if (item.id === 'approvals' && pendingCount > 0) {
+          return { ...item, badge: pendingCount };
+        }
+        return item;
+      })
+    }));
+  }, [baseNavigation, pendingCount]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
@@ -109,7 +131,7 @@ export default function BusinessLayout({
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
-            
+
             <div className="hidden md:flex items-center gap-3 ml-3 pl-3 border-l">
               <div className="text-right">
                 <p className="text-sm font-medium">{user?.name}</p>
