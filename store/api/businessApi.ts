@@ -149,6 +149,19 @@ export const businessApi = baseApi.injectEndpoints({
       ],
     }),
 
+    submitPurchaseOrderForApproval: builder.mutation<ApiResponse<PurchaseOrder>, string>({
+      query: (id) => ({
+        url: `purchase-orders/${id}/submit`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: 'PurchaseOrders', id },
+        'PurchaseOrders',
+        'Approvals',
+        'BusinessDashboard',
+      ],
+    }),
+
     getPendingPOApprovals: builder.query<PaginatedResponse<PurchaseOrder>, void>({
       query: () => 'purchase-orders/pending/approvals',
       providesTags: ['PurchaseOrders', 'Approvals'],
@@ -438,6 +451,7 @@ export const {
   useUpdatePurchaseOrderMutation,
   useDeletePurchaseOrderMutation,
   useApprovePurchaseOrderMutation,
+  useSubmitPurchaseOrderForApprovalMutation,
   useGetPendingPOApprovalsQuery,
   useAssignVendorToPOMutation,
 

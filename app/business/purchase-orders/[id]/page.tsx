@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { useGetPurchaseOrderByIdQuery, useApprovePurchaseOrderMutation } from '@/store/api/businessApi';
+import { useGetPurchaseOrderByIdQuery, useApprovePurchaseOrderMutation, useSubmitPurchaseOrderForApprovalMutation } from '@/store/api/businessApi';
 import { useRecordGoodsReceiptMutation } from '@/store/api/workflowApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
     const { data: poResponse, isLoading } = useGetPurchaseOrderByIdQuery(id);
     const [approvePO, { isLoading: isApproving }] = useApprovePurchaseOrderMutation();
     const [recordGR, { isLoading: isRecordingGR }] = useRecordGoodsReceiptMutation();
+    const [submitPO, { isLoading: isSubmitting }] = useSubmitPurchaseOrderForApprovalMutation();
 
     const po: any = poResponse?.data;
 
@@ -128,8 +129,25 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
     }
 
     const status = statusConfig[po.status] || statusConfig.DRAFT;
+    const canSubmit = po.status === 'DRAFT';
     const canApprove = po.status === 'PENDING_APPROVAL';
     const canRecordGR = po.status === 'APPROVED' || po.status === 'SENT' || po.status === 'PARTIALLY_RECEIVED';
+
+    const handleSubmitForApproval = async () => {
+        try {
+            await submitPO(id).unwrap();
+            toast({
+                title: 'Success',
+                description: 'Purchase Order submitted for approval',
+            });
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error?.data?.message || 'Failed to submit for approval',
+                variant: 'destructive',
+            });
+        }
+    };
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -151,6 +169,13 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                    {canSubmit && (
+                        <Button onClick={handleSubmitForApproval} disabled={isSubmitting}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
+                        </Button>
+                    )}
+
                     {canApprove && (
                         <>
                             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
