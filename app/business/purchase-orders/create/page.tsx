@@ -4,13 +4,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { useCreatePurchaseOrderMutation } from '@/store/api/businessApi';
+import {
+  useCreatePurchaseOrderMutation,
+  useGetVendorsQuery,
+  useGetPurchaseRequisitionsQuery
+} from '@/store/api/businessApi';
 import { canCreatePO } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -26,6 +31,13 @@ export default function CreatePOPage() {
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
   const [createPO, { isLoading }] = useCreatePurchaseOrderMutation();
+
+  // Fetch real vendors and PRs for dropdowns
+  const { data: vendorsData, isLoading: vendorsLoading } = useGetVendorsQuery({ pageSize: 100, status: 'ACTIVE' });
+  const { data: prsData, isLoading: prsLoading } = useGetPurchaseRequisitionsQuery({ pageSize: 100, status: 'APPROVED' });
+
+  const vendors = vendorsData?.data || [];
+  const prs = prsData?.data || [];
 
   const [formData, setFormData] = useState({
     poNumber: '',
@@ -57,14 +69,16 @@ export default function CreatePOPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createPO({
+      const payload: any = {
         ...formData,
         totalAmount: parseFloat(formData.totalAmount),
-      }).unwrap();
+        prId: formData.prId === 'none' ? undefined : formData.prId,
+      };
+      await createPO(payload).unwrap();
       toast.success('Purchase Order created successfully');
       router.push('/business/purchase-orders');
-    } catch (error) {
-      toast.error('Failed to create purchase order');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create purchase order');
       console.error('Error creating PO:', error);
     }
   };
@@ -114,40 +128,57 @@ export default function CreatePOPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="prId">Related PR (Optional)</Label>
-                <Select
-                  value={formData.prId}
-                  onValueChange={(value) => handleChange('prId', value)}
-                >
-                  <SelectTrigger id="prId">
-                    <SelectValue placeholder="Select PR" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="pr1">PR-2025-001</SelectItem>
-                    <SelectItem value="pr2">PR-2025-002</SelectItem>
-                    <SelectItem value="pr3">PR-2025-003</SelectItem>
-                  </SelectContent>
-                </Select>
+                {prsLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select
+                    value={formData.prId}
+                    onValueChange={(value) => handleChange('prId', value)}
+                  >
+                    <SelectTrigger id="prId">
+                      <SelectValue placeholder="Select PR" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {prs.map((pr: any) => (
+                        <SelectItem key={pr.id} value={pr.id}>
+                          {pr.prNumber} - {pr.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
             {/* Vendor Selection */}
             <div className="space-y-2">
               <Label htmlFor="vendorId">Vendor *</Label>
-              <Select
-                value={formData.vendorId}
-                onValueChange={(value) => handleChange('vendorId', value)}
-                required
-              >
-                <SelectTrigger id="vendorId">
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vendor1">Vendor 1</SelectItem>
-                  <SelectItem value="vendor2">Vendor 2</SelectItem>
-                  <SelectItem value="vendor3">Vendor 3</SelectItem>
-                </SelectContent>
-              </Select>
+              {vendorsLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : vendors.length === 0 ? (
+                <div className="text-sm text-destructive p-3 border border-destructive/50 rounded-md">
+                  No active vendors found. Please add vendors first.
+                </div>
+              ) : (
+                <Select
+                  value={formData.vendorId}
+                  onValueChange={(value) => handleChange('vendorId', value)}
+                  required
+                >
+                  <SelectTrigger id="vendorId">
+                    <SelectValue placeholder="Select vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((vendor: any) => (
+                      <SelectItem key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                        {vendor.registrationNumber && ` (${vendor.registrationNumber})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Financial Details */}
@@ -243,7 +274,7 @@ export default function CreatePOPage() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3 pt-4">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || vendors.length === 0}>
                 <Save className="mr-2 h-4 w-4" />
                 {isLoading ? 'Creating...' : 'Create Purchase Order'}
               </Button>
