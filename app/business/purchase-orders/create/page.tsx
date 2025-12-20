@@ -9,6 +9,7 @@ import {
   useGetVendorsQuery,
   useGetPurchaseRequisitionsQuery
 } from '@/store/api/businessApi';
+import { useGetBudgetsQuery } from '@/store/api/financeApi';
 import { canCreatePO } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,10 @@ export default function CreatePOPage() {
   const vendors = vendorsData?.data || [];
   const prs = prsData?.data || [];
 
+  // Fetch available budgets
+  const { data: budgetsData, isLoading: budgetsLoading } = useGetBudgetsQuery({ pageSize: 100 });
+  const budgets = budgetsData?.data || [];
+
   const [formData, setFormData] = useState({
     poNumber: '',
     title: '',
@@ -57,6 +62,7 @@ export default function CreatePOPage() {
     paymentTerms: 'NET_30',
     notes: '',
     currency: 'USD',
+    budgetId: '', // Optional budget linkage
   });
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
@@ -118,6 +124,7 @@ export default function CreatePOPage() {
         prId: formData.prId && formData.prId !== 'none' ? formData.prId : undefined,
         vendorIds: [formData.vendorId], // Backend expects array
         currency: formData.currency,
+        budgetId: formData.budgetId && formData.budgetId !== 'none' ? formData.budgetId : undefined,
       };
 
       await createPO(payload).unwrap();
@@ -264,6 +271,32 @@ export default function CreatePOPage() {
                         <SelectItem key={vendor.id} value={vendor.id}>
                           {vendor.name}
                           {vendor.registrationNumber && ` (${vendor.registrationNumber})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Budget Selection (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="budgetId">Budget (Optional)</Label>
+                <p className="text-xs text-muted-foreground">Link this PO to a budget for financial control</p>
+                {budgetsLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select
+                    value={formData.budgetId}
+                    onValueChange={(value) => handleChange('budgetId', value)}
+                  >
+                    <SelectTrigger id="budgetId">
+                      <SelectValue placeholder="Select budget (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No budget</SelectItem>
+                      {budgets.map((budget: any) => (
+                        <SelectItem key={budget.id} value={budget.id}>
+                          {budget.name} - Available: {new Intl.NumberFormat().format(budget.availableAmount || 0)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -20,7 +20,7 @@ import {
     Building2,
     Truck,
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, toNumber } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -59,7 +59,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
     const [approvePO, { isLoading: isApproving }] = useApprovePurchaseOrderMutation();
     const [recordGR, { isLoading: isRecordingGR }] = useRecordGoodsReceiptMutation();
 
-    const po = poResponse?.data;
+    const po: any = poResponse?.data;
 
     const handleApprove = async (approved: boolean) => {
         try {
@@ -271,7 +271,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="font-semibold">{po.deliveryDate ? formatDate(po.deliveryDate) : 'Not specified'}</p>
+                        <p className="font-semibold">{po.expectedDelivery ? formatDate(po.expectedDelivery) : 'Not specified'}</p>
                     </CardContent>
                 </Card>
 
@@ -284,7 +284,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold">
-                            {formatCurrency(po.totalAmount || 0, po.currency)}
+                            {formatCurrency(toNumber(po.totalAmount || po.amount), po.currency?.code || 'USD')}
                         </p>
                     </CardContent>
                 </Card>
@@ -297,7 +297,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="font-semibold">{po.createdBy?.name || po.createdBy?.username || 'N/A'}</p>
+                        <p className="font-semibold">{po.creator?.firstName ? `${po.creator.firstName} ${po.creator.lastName || ''}` : po.creator?.email || 'N/A'}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -313,11 +313,12 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {po.vendors.map((vendor: any, index: number) => (
-                                <div key={vendor.id || index} className="border rounded-lg p-4">
-                                    <p className="font-medium">{vendor.name || vendor.companyName}</p>
-                                    {vendor.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
-                                    {vendor.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
+                            {po.vendors.map((pv: any, index: number) => (
+                                <div key={pv.vendor?.id || index} className="border rounded-lg p-4">
+                                    <p className="font-medium">{pv.vendor?.name || 'Unknown Vendor'}</p>
+                                    {pv.vendor?.contactEmail && <p className="text-sm text-muted-foreground">{pv.vendor.contactEmail}</p>}
+                                    {pv.vendor?.contactPhone && <p className="text-sm text-muted-foreground">{pv.vendor.contactPhone}</p>}
+                                    <Badge variant="outline" className="mt-2">{pv.role || 'PRIMARY'}</Badge>
                                 </div>
                             ))}
                         </div>
@@ -386,7 +387,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                             )}
                             <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
                                 <span>Total:</span>
-                                <span>{formatCurrency(po.totalAmount || 0, po.currency)}</span>
+                                <span>{formatCurrency(toNumber(po.totalAmount || po.amount), po.currency?.code || 'USD')}</span>
                             </div>
                         </div>
                     )}
@@ -443,17 +444,17 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Approval Information */}
-            {(po.approvedBy || po.approvedAt || po.rejectionReason) && (
+            {(po.approver || po.approvedAt) && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Approval Information</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
-                            {po.approvedBy && (
+                            {po.approver && (
                                 <p className="text-sm">
                                     <span className="text-muted-foreground">Processed by: </span>
-                                    <span className="font-medium">{po.approvedBy.name || po.approvedBy.username}</span>
+                                    <span className="font-medium">{po.approver.firstName} {po.approver.lastName || ''}</span>
                                 </p>
                             )}
                             {po.approvedAt && (
