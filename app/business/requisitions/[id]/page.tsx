@@ -124,6 +124,12 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     const canApprove = pr.status === 'PENDING' || pr.status === 'PENDING_APPROVAL';
     const canCreatePO = pr.status === 'APPROVED';
 
+    // Calculate total from items if estimatedAmount is not set
+    const calculatedTotal = pr.items && Array.isArray(pr.items)
+        ? pr.items.reduce((sum: number, item: any) => sum + ((item.quantity || 0) * (item.unitPrice || 0)), 0)
+        : 0;
+    const displayTotal = pr.estimatedAmount || pr.totalAmount || calculatedTotal;
+
     const handleSubmitForApproval = async () => {
         try {
             await updatePR({ id, data: { status: 'PENDING' as any } }).unwrap();
@@ -304,7 +310,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="font-semibold">{pr.requiredDate ? formatDate(pr.requiredDate) : 'Not specified'}</p>
+                        <p className="font-semibold">{pr.requiredBy ? formatDate(pr.requiredBy) : (pr.requiredDate ? formatDate(pr.requiredDate) : 'Not specified')}</p>
                     </CardContent>
                 </Card>
 
@@ -317,7 +323,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold">
-                            {formatCurrency(pr.totalAmount || 0, pr.currency)}
+                            {formatCurrency(displayTotal, pr.currency || 'USD')}
                         </p>
                     </CardContent>
                 </Card>
@@ -408,7 +414,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                         <div className="mt-6 space-y-2 max-w-md ml-auto">
                             <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
                                 <span>Estimated Total:</span>
-                                <span>{formatCurrency(pr.totalAmount || 0, pr.currency)}</span>
+                                <span>{formatCurrency(displayTotal, pr.currency || 'USD')}</span>
                             </div>
                         </div>
                     )}
