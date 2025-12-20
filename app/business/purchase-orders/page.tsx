@@ -276,35 +276,37 @@ export default function PurchaseOrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseOrders.map((po) => {
+                  {purchaseOrders.map((po: any) => {
                     const status = statusConfig[po.status] || statusConfig.DRAFT;
                     const StatusIcon = status.icon;
+                    // Get vendor name from vendors array
+                    const vendorName = po.vendors?.[0]?.vendor?.name || 'Not assigned';
                     return (
                       <TableRow key={po.id}>
                         <TableCell className="font-medium font-mono">
-                          {po.referenceNumber}
+                          {po.poNumber}
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div className="truncate font-medium">{po.title}</div>
-                          {po.buyerName && (
+                          {po.creator?.firstName && (
                             <div className="text-xs text-muted-foreground">
-                              Buyer: {po.buyerName}
+                              By: {po.creator.firstName} {po.creator.lastName}
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>{po.vendorName || 'Not assigned'}</TableCell>
+                        <TableCell>{vendorName}</TableCell>
                         <TableCell className="font-mono text-sm">
-                          {po.purchaseRequisitionNumber || 'N/A'}
+                          {po.purchaseRequisition?.prNumber || 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {po.deliveryDate ? (
-                            <span className="text-sm">{formatDate(po.deliveryDate)}</span>
+                          {po.expectedDelivery ? (
+                            <span className="text-sm">{formatDate(po.expectedDelivery)}</span>
                           ) : (
                             <span className="text-muted-foreground text-sm">Not set</span>
                           )}
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(po.totalAmount, po.currency)}
+                          {formatCurrency(po.totalAmount || po.amount, po.currency?.code || 'USD')}
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="gap-1">
