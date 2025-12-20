@@ -66,11 +66,11 @@ export default function ApprovalHistoryPage() {
 
   const canView = isApprover(user);
 
-  // Calculate stats
+  // Calculate stats - using status field from PRs (APPROVED/REJECTED)
   const stats = {
     total,
-    approved: history.filter(h => h.action === 'APPROVE').length,
-    rejected: history.filter(h => h.action === 'REJECT').length,
+    approved: history.filter((h: any) => h.status === 'APPROVED').length,
+    rejected: history.filter((h: any) => h.status === 'REJECTED').length,
   };
 
   if (!canView) {
