@@ -35,7 +35,7 @@ import {
   Send,
   Package,
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDate, formatCompactNumber, toNumber } from '@/lib/formatters';
 import { canCreatePO } from '@/utils/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -82,7 +82,7 @@ export default function PurchaseOrdersPage() {
     approved: purchaseOrders.filter(po => po.status === 'APPROVED').length,
     sent: purchaseOrders.filter(po => po.status === 'SENT_TO_VENDOR').length,
     received: purchaseOrders.filter(po => po.status === 'RECEIVED').length,
-    totalValue: purchaseOrders.reduce((sum, po) => sum + (po.totalAmount || 0), 0),
+    totalValue: purchaseOrders.reduce((sum, po: any) => sum + toNumber(po.totalAmount || po.amount), 0),
   };
 
   return (
@@ -177,7 +177,7 @@ export default function PurchaseOrdersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {isLoading ? '...' : formatCurrency(stats.totalValue, 'USD')}
+              {isLoading ? '...' : formatCompactNumber(stats.totalValue, 'USD')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Outstanding</p>
           </CardContent>
