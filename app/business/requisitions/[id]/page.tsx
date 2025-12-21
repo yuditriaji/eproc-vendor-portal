@@ -130,7 +130,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     const canSubmit = pr.status === 'DRAFT';
     const canApprove = pr.status === 'PENDING' || pr.status === 'PENDING_APPROVAL';
     const canCreatePO = pr.status === 'APPROVED';
-    const canCreateSourcing = pr.status === 'APPROVED' && !(pr as any).sourcingType; // Can create RFQ/Tender if approved and no sourcing started
+    const canCreateSourcing = pr.status === 'APPROVED'; // Always show for approved PRs, backend validates
 
     // Calculate total from items if estimatedAmount is not set
     const calculatedTotal = pr.items && Array.isArray(pr.items)
