@@ -80,7 +80,7 @@ export default function ContractsPage() {
     completed: contracts.filter(c => c.status === 'COMPLETED').length,
     terminated: contracts.filter(c => c.status === 'TERMINATED').length,
     suspended: contracts.filter(c => c.status === 'SUSPENDED').length,
-    totalValue: contracts.reduce((sum, c) => sum + (c.amount || 0), 0),
+    totalValue: contracts.reduce((sum, c) => sum + (Number((c as any).amount) || Number((c as any).totalAmount) || 0), 0),
   };
 
   return (
@@ -278,7 +278,7 @@ export default function ContractsPage() {
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>{contract.vendorName || 'N/A'}</TableCell>
+                        <TableCell>{(contract as any).vendorName || (contract as any).vendors?.[0]?.vendor?.name || (contract as any).vendors?.[0]?.name || 'N/A'}</TableCell>
                         <TableCell>
                           <span className="text-sm">{contract.startDate ? formatDate(contract.startDate) : 'N/A'}</span>
                         </TableCell>
@@ -293,7 +293,7 @@ export default function ContractsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(contract.amount || 0, contract.currency || 'USD')}
+                          {formatCurrency(Number((contract as any).amount) || Number((contract as any).totalAmount) || 0, (contract as any).currency?.code || (contract as any).currency || 'USD')}
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="gap-1">

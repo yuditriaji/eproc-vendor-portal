@@ -392,7 +392,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                     </CardHeader>
                     <CardContent>
                         <p className="text-2xl font-bold">
-                            {formatCurrency(contract.totalValue || contract.value || 0, contract.currency)}
+                            {formatCurrency(Number((contract as any).totalAmount) || Number((contract as any).totalValue) || Number((contract as any).value) || 0, (contract as any).currency?.code || (contract as any).currency || 'USD')}
                         </p>
                     </CardContent>
                 </Card>
