@@ -470,21 +470,30 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                         <CardContent>
                             {contract.vendors && contract.vendors.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {contract.vendors.map((vendor: any, index: number) => (
-                                        <div key={vendor.id || index} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <p className="font-medium">{vendor.name || vendor.companyName}</p>
-                                                    {vendor.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
-                                                    {vendor.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
-                                                    {vendor.address && <p className="text-sm text-muted-foreground">{vendor.address}</p>}
+                                    {contract.vendors.map((contractVendor: any, index: number) => {
+                                        const vendor = contractVendor.vendor || contractVendor;
+                                        return (
+                                            <div key={vendor?.id || index} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="font-medium">{vendor?.name || vendor?.companyName || 'Unknown Vendor'}</p>
+                                                        {vendor?.contactEmail && <p className="text-sm text-muted-foreground">{vendor.contactEmail}</p>}
+                                                        {vendor?.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
+                                                        {vendor?.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
+                                                        {vendor?.address && <p className="text-sm text-muted-foreground">{vendor.address}</p>}
+                                                        {contractVendor.role && (
+                                                            <Badge variant="outline" className="mt-2">{contractVendor.role}</Badge>
+                                                        )}
+                                                    </div>
+                                                    {vendor?.id && (
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <Link href={`/business/vendors/${vendor.id}`}>View</Link>
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                                <Button variant="ghost" size="sm" asChild>
-                                                    <Link href={`/business/vendors/${vendor.id}`}>View</Link>
-                                                </Button>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <p className="text-muted-foreground text-center py-8">No vendors associated with this contract</p>
