@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { useGetApprovalHistoryQuery } from '@/store/api/workflowApi';
+import { useGetPOApprovalHistoryQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,25 +53,50 @@ export default function ApprovalHistoryPage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const { data: historyResponse, isLoading } = useGetApprovalHistoryQuery({
+  // Fetch PR approval history (when all or PURCHASE_REQUISITION selected)
+  const shouldFetchPRs = typeFilter === 'all' || typeFilter === 'PURCHASE_REQUISITION';
+  const { data: prHistoryResponse, isLoading: prLoading } = useGetApprovalHistoryQuery({
     page,
     pageSize,
-    type: typeFilter === 'all' ? undefined : typeFilter,
+    type: 'PURCHASE_REQUISITION',
     action: actionFilter === 'all' ? undefined : actionFilter,
     search: searchQuery || undefined,
-  });
+  }, { skip: !shouldFetchPRs });
 
-  const history = historyResponse?.data || [];
-  const totalPages = historyResponse?.meta?.totalPages || 1;
-  const total = historyResponse?.meta?.total || 0;
+  // Fetch PO approval history (when all or PURCHASE_ORDER selected)
+  const shouldFetchPOs = typeFilter === 'all' || typeFilter === 'PURCHASE_ORDER';
+  const { data: poHistoryResponse, isLoading: poLoading } = useGetPOApprovalHistoryQuery({
+    page,
+    pageSize,
+    action: actionFilter === 'all' ? undefined : actionFilter,
+    search: searchQuery || undefined,
+  }, { skip: !shouldFetchPOs });
+
+  // Merge results based on filter
+  const prHistory = (shouldFetchPRs && prHistoryResponse?.data) || [];
+  const poHistory = (shouldFetchPOs && poHistoryResponse?.data) || [];
+
+  // Combine and possibly filter
+  let history: any[] = [];
+  if (typeFilter === 'all') {
+    history = [...prHistory, ...poHistory];
+  } else if (typeFilter === 'PURCHASE_REQUISITION') {
+    history = prHistory;
+  } else if (typeFilter === 'PURCHASE_ORDER') {
+    history = poHistory;
+  }
+
+  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading);
+  const total = history.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
 
   const canView = isApprover(user);
 
-  // Calculate stats - using status field from PRs (APPROVED/REJECTED)
+  // Calculate stats from merged data
   const stats = {
     total,
-    approved: history.filter((h: any) => h.status === 'APPROVED').length,
-    rejected: history.filter((h: any) => h.status === 'REJECTED').length,
+    approved: history.filter((h: any) => h.status === 'APPROVED' || h.action === 'APPROVE').length,
+    rejected: history.filter((h: any) => h.status === 'REJECTED' || h.action === 'REJECT').length,
   };
 
   if (!canView) {

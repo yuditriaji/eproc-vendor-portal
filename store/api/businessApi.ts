@@ -167,6 +167,17 @@ export const businessApi = baseApi.injectEndpoints({
       providesTags: ['PurchaseOrders', 'Approvals'],
     }),
 
+    getPOApprovalHistory: builder.query<
+      PaginatedResponse<any>,
+      { page?: number; pageSize?: number; action?: string; search?: string }
+    >({
+      query: (params) => ({
+        url: 'purchase-orders/approval-history',
+        params,
+      }),
+      providesTags: ['PurchaseOrders', 'Approvals'],
+    }),
+
     assignVendorToPO: builder.mutation<
       ApiResponse<PurchaseOrder>,
       { id: string; vendorId: string }
@@ -453,6 +464,7 @@ export const {
   useApprovePurchaseOrderMutation,
   useSubmitPurchaseOrderForApprovalMutation,
   useGetPendingPOApprovalsQuery,
+  useGetPOApprovalHistoryQuery,
   useAssignVendorToPOMutation,
 
   // Contracts

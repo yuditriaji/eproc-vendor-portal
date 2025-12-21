@@ -8,6 +8,7 @@ import {
   useGetMyPendingApprovalsQuery,
   useApproveRequestMutation,
 } from '@/store/api/workflowApi';
+import { useGetPendingPOApprovalsQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,28 +84,48 @@ export default function ApprovalsPage() {
   const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
   const [comments, setComments] = useState('');
 
-  const { data: approvalsResponse, isLoading } = useGetMyPendingApprovalsQuery({
+  // Fetch PR pending approvals (when all or PURCHASE_REQUISITION selected)
+  const shouldFetchPRs = typeFilter === 'all' || typeFilter === 'PURCHASE_REQUISITION';
+  const { data: prApprovalsResponse, isLoading: prLoading } = useGetMyPendingApprovalsQuery({
     page,
     pageSize,
-    type: typeFilter === 'all' ? undefined : typeFilter,
+    type: 'PURCHASE_REQUISITION',
     priority: priorityFilter === 'all' ? undefined : priorityFilter,
     search: searchQuery || undefined,
-  });
+  }, { skip: !shouldFetchPRs });
+
+  // Fetch PO pending approvals (when all or PURCHASE_ORDER selected)
+  const shouldFetchPOs = typeFilter === 'all' || typeFilter === 'PURCHASE_ORDER';
+  const { data: poApprovalsResponse, isLoading: poLoading } = useGetPendingPOApprovalsQuery(undefined, { skip: !shouldFetchPOs });
 
   const [approveRequest, { isLoading: isProcessing }] = useApproveRequestMutation();
 
-  const approvals = approvalsResponse?.data || [];
-  const totalPages = approvalsResponse?.meta?.totalPages || 1;
-  const total = approvalsResponse?.meta?.total || 0;
+  // Merge results based on filter
+  const prApprovals = (shouldFetchPRs && prApprovalsResponse?.data) || [];
+  const poApprovals = (shouldFetchPOs && poApprovalsResponse?.data) || [];
+
+  // Combine and possibly filter
+  let approvals: any[] = [];
+  if (typeFilter === 'all') {
+    approvals = [...prApprovals, ...poApprovals];
+  } else if (typeFilter === 'PURCHASE_REQUISITION') {
+    approvals = prApprovals;
+  } else if (typeFilter === 'PURCHASE_ORDER') {
+    approvals = poApprovals;
+  }
+
+  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading);
+  const total = approvals.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
 
   const canApprove = isApprover(user);
 
-  // Calculate stats
+  // Calculate stats from actual merged data
   const stats = {
     total,
-    urgent: approvals.filter(a => a.priority === 'URGENT').length,
-    high: approvals.filter(a => a.priority === 'HIGH').length,
-    overdue: approvals.filter(a => a.dueDate && new Date(a.dueDate) < new Date()).length,
+    urgent: approvals.filter((a: any) => a.priority === 'URGENT').length,
+    high: approvals.filter((a: any) => a.priority === 'HIGH').length,
+    overdue: approvals.filter((a: any) => a.dueDate && new Date(a.dueDate) < new Date()).length,
   };
 
   const handleOpenDialog = (approval: any, action: 'approve' | 'reject') => {
