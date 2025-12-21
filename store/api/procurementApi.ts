@@ -73,9 +73,9 @@ export const procurementApi = baseApi.injectEndpoints({
       PaginatedResponse<RFQ>,
       { page?: number; pageSize?: number; status?: string; prId?: string; search?: string }
     >({
-      query: (params) => ({
+      query: ({ pageSize, ...rest }) => ({
         url: 'rfqs',
-        params,
+        params: { ...rest, limit: pageSize },
       }),
       providesTags: ['RFQs'],
     }),
