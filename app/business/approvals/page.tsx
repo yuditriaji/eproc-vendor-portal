@@ -8,7 +8,7 @@ import {
   useGetMyPendingApprovalsQuery,
   useApproveRequestMutation,
 } from '@/store/api/workflowApi';
-import { useGetPendingPOApprovalsQuery } from '@/store/api/businessApi';
+import { useGetPendingPOApprovalsQuery, useGetContractsQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,23 +98,51 @@ export default function ApprovalsPage() {
   const shouldFetchPOs = typeFilter === 'all' || typeFilter === 'PURCHASE_ORDER';
   const { data: poApprovalsResponse, isLoading: poLoading } = useGetPendingPOApprovalsQuery(undefined, { skip: !shouldFetchPOs });
 
+  // Fetch Contract pending approvals (when all or CONTRACT selected)
+  const shouldFetchContracts = typeFilter === 'all' || typeFilter === 'CONTRACT';
+  const { data: contractsResponse, isLoading: contractsLoading } = useGetContractsQuery({
+    page,
+    pageSize,
+    status: 'PENDING_APPROVAL',
+  }, { skip: !shouldFetchContracts });
+
   const [approveRequest, { isLoading: isProcessing }] = useApproveRequestMutation();
 
   // Merge results based on filter
   const prApprovals = (shouldFetchPRs && prApprovalsResponse?.data) || [];
   const poApprovals = (shouldFetchPOs && poApprovalsResponse?.data) || [];
 
+  // Transform contracts to approval format
+  const contractApprovals = (shouldFetchContracts && contractsResponse?.data)
+    ? contractsResponse.data.map((contract: any) => ({
+      id: contract.id,
+      entityId: contract.id,
+      entityType: 'CONTRACT',
+      entityNumber: contract.contractNumber,
+      title: contract.title,
+      description: contract.description,
+      amount: contract.totalAmount,
+      currency: contract.currency?.code || 'USD',
+      priority: 'MEDIUM',
+      requestedBy: contract.owner?.firstName ? `${contract.owner.firstName} ${contract.owner.lastName}` : contract.owner?.username,
+      requestedAt: contract.createdAt,
+      status: 'PENDING',
+    }))
+    : [];
+
   // Combine and possibly filter
   let approvals: any[] = [];
   if (typeFilter === 'all') {
-    approvals = [...prApprovals, ...poApprovals];
+    approvals = [...prApprovals, ...poApprovals, ...contractApprovals];
   } else if (typeFilter === 'PURCHASE_REQUISITION') {
     approvals = prApprovals;
   } else if (typeFilter === 'PURCHASE_ORDER') {
     approvals = poApprovals;
+  } else if (typeFilter === 'CONTRACT') {
+    approvals = contractApprovals;
   }
 
-  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading);
+  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading) || (shouldFetchContracts && contractsLoading);
   const total = approvals.length;
   const totalPages = Math.ceil(total / pageSize) || 1;
 
