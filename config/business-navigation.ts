@@ -15,6 +15,7 @@ import {
   FileSignature,
   Package,
   TrendingUp,
+  FileSearch,
   type LucideIcon,
 } from 'lucide-react';
 import type { User } from '@/types';
@@ -65,6 +66,13 @@ export function getBusinessNavigation(user: User | null): BusinessNavSection[] {
           label: 'Tenders',
           icon: FileText,
           href: '/business/tenders',
+          roles: ['ADMIN', 'USER', 'BUYER', 'MANAGER'],
+        },
+        {
+          id: 'rfq',
+          label: 'Request for Quotations',
+          icon: FileSearch,
+          href: '/business/rfq',
           roles: ['ADMIN', 'USER', 'BUYER', 'MANAGER'],
         },
         {

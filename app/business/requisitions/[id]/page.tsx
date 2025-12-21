@@ -4,6 +4,7 @@ import { use } from 'react';
 import Link from 'next/link';
 import { useGetPurchaseRequisitionByIdQuery, useUpdatePurchaseRequisitionMutation } from '@/store/api/businessApi';
 import { useApprovePRInWorkflowMutation, useCreatePOFromPRMutation } from '@/store/api/workflowApi';
+import { useCreateRFQFromPRMutation, useCreateTenderFromPRMutation } from '@/store/api/procurementApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,8 @@ import {
     User,
     Clock,
     Send,
+    FileSearch,
+    Gavel,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,6 +61,8 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     const [approvePR, { isLoading: isApproving }] = useApprovePRInWorkflowMutation();
     const [createPO, { isLoading: isCreatingPO }] = useCreatePOFromPRMutation();
     const [updatePR, { isLoading: isSubmitting }] = useUpdatePurchaseRequisitionMutation();
+    const [createRFQFromPR, { isLoading: isCreatingRFQ }] = useCreateRFQFromPRMutation();
+    const [createTenderFromPR, { isLoading: isCreatingTender }] = useCreateTenderFromPRMutation();
 
     const pr = prResponse?.data;
 
@@ -123,6 +128,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
     const canSubmit = pr.status === 'DRAFT';
     const canApprove = pr.status === 'PENDING' || pr.status === 'PENDING_APPROVAL';
     const canCreatePO = pr.status === 'APPROVED';
+    const canCreateSourcing = pr.status === 'APPROVED' && !(pr as any).sourcingType; // Can create RFQ/Tender if approved and no sourcing started
 
     // Calculate total from items if estimatedAmount is not set
     const calculatedTotal = pr.items && Array.isArray(pr.items)
@@ -143,6 +149,58 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
             toast({
                 title: 'Error',
                 description: error?.data?.message || 'Failed to submit for approval',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    const handleCreateRFQ = async () => {
+        try {
+            await createRFQFromPR({
+                prId: id,
+                data: {
+                    title: pr.title,
+                    description: pr.description,
+                    items: pr.items as any,
+                    estimatedAmount: pr.estimatedAmount || pr.totalAmount,
+                    targetVendorIds: [],
+                },
+            }).unwrap();
+            toast({
+                title: 'Success',
+                description: 'RFQ created from this Purchase Requisition',
+            });
+            refetch();
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error?.data?.message || 'Failed to create RFQ',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    const handleCreateTender = async () => {
+        try {
+            await createTenderFromPR({
+                prId: id,
+                data: {
+                    title: pr.title,
+                    description: pr.description,
+                    requirements: {},
+                    criteria: {},
+                    estimatedValue: pr.estimatedAmount || pr.totalAmount,
+                },
+            }).unwrap();
+            toast({
+                title: 'Success',
+                description: 'Tender created from this Purchase Requisition',
+            });
+            refetch();
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error?.data?.message || 'Failed to create Tender',
                 variant: 'destructive',
             });
         }
@@ -284,6 +342,28 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+                    )}
+
+                    {/* Sourcing Buttons for Approved PRs */}
+                    {canCreateSourcing && (
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={handleCreateRFQ}
+                                disabled={isCreatingRFQ}
+                            >
+                                <FileSearch className="mr-2 h-4 w-4" />
+                                {isCreatingRFQ ? 'Creating...' : 'Create RFQ'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={handleCreateTender}
+                                disabled={isCreatingTender}
+                            >
+                                <Gavel className="mr-2 h-4 w-4" />
+                                {isCreatingTender ? 'Creating...' : 'Create Tender'}
+                            </Button>
+                        </>
                     )}
                 </div>
             </div>
