@@ -32,6 +32,8 @@ import {
   ArrowLeft,
   Eye,
   TrendingUp,
+  FileText,
+  ShoppingCart,
 } from 'lucide-react';
 import { formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,6 +45,15 @@ type ActionFilter = 'all' | 'APPROVE' | 'REJECT';
 const actionConfig = {
   APPROVE: { label: 'Approved', variant: 'default' as const, icon: CheckCircle, color: 'text-green-600' },
   REJECT: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle, color: 'text-red-600' },
+};
+
+const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
+  PURCHASE_REQUISITION: { label: 'Purchase Requisition', icon: FileText, color: 'text-blue-600' },
+  PURCHASE_ORDER: { label: 'Purchase Order', icon: ShoppingCart, color: 'text-green-600' },
+  INVOICE: { label: 'Invoice', icon: FileText, color: 'text-purple-600' },
+  PAYMENT: { label: 'Payment', icon: FileText, color: 'text-orange-600' },
+  BUDGET_TRANSFER: { label: 'Budget Transfer', icon: FileText, color: 'text-cyan-600' },
+  CONTRACT: { label: 'Contract', icon: FileText, color: 'text-pink-600' },
 };
 
 export default function ApprovalHistoryPage() {
@@ -262,7 +273,8 @@ export default function ApprovalHistoryPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Status</TableHead>
-                    <TableHead>PR Number</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Entity #</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Requester</TableHead>
                     <TableHead>Approver</TableHead>
@@ -272,18 +284,28 @@ export default function ApprovalHistoryPage() {
                 </TableHeader>
                 <TableBody>
                   {history.map((record: any) => {
+                    // Determine type from record
+                    const recordType = record.type || 'PURCHASE_REQUISITION';
+                    const typeInfo = typeConfig[recordType] || typeConfig.PURCHASE_REQUISITION;
+                    const TypeIcon = typeInfo.icon;
                     // Map PR status to action
-                    const isApproved = record.status === 'APPROVED';
+                    const isApproved = record.status === 'APPROVED' || record.action === 'APPROVE';
                     const action = isApproved ? actionConfig.APPROVE : actionConfig.REJECT;
                     const ActionIcon = action.icon;
                     // Map requester name
-                    const requesterName = record.requester
+                    const requesterName = record.requesterName || (record.requester
                       ? `${record.requester.firstName || ''} ${record.requester.lastName || ''}`.trim() || record.requester.username
-                      : 'N/A';
+                      : 'N/A');
                     // Map approver name
-                    const approverName = record.approver
+                    const approverName = record.approverName || (record.approver
                       ? `${record.approver.firstName || ''} ${record.approver.lastName || ''}`.trim() || record.approver.username
-                      : 'N/A';
+                      : 'N/A');
+                    // Get entity number based on type
+                    const entityNumber = record.referenceNumber || record.prNumber || record.poNumber || '-';
+                    // Get view link based on type
+                    const viewLink = recordType === 'PURCHASE_ORDER'
+                      ? `/business/purchase-orders/${record.id}`
+                      : `/business/requisitions/${record.id}`;
                     return (
                       <TableRow key={record.id}>
                         <TableCell>
@@ -292,8 +314,14 @@ export default function ApprovalHistoryPage() {
                             {action.label}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          <div className={`flex items-center gap-1.5 ${typeInfo.color}`}>
+                            <TypeIcon className="h-4 w-4" />
+                            <span className="text-sm">{typeInfo.label}</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="font-mono text-sm">
-                          {record.prNumber || '-'}
+                          {entityNumber}
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div className="text-sm font-medium truncate">{record.title}</div>
@@ -305,11 +333,11 @@ export default function ApprovalHistoryPage() {
                           <span className="text-sm">{approverName}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{record.approvedAt ? formatDate(record.approvedAt) : 'N/A'}</span>
+                          <span className="text-sm">{record.approvedAt || record.processedAt ? formatDate(record.approvedAt || record.processedAt) : 'N/A'}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/business/requisitions/${record.id}`}>
+                            <Link href={viewLink}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
