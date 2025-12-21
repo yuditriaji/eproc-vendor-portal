@@ -280,11 +280,11 @@ export default function ContractsPage() {
                         </TableCell>
                         <TableCell>{contract.vendorName || 'N/A'}</TableCell>
                         <TableCell>
-                          <span className="text-sm">{formatDate(contract.startDate)}</span>
+                          <span className="text-sm">{contract.startDate ? formatDate(contract.startDate) : 'N/A'}</span>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <span className="text-sm">{formatDate(contract.endDate)}</span>
+                            <span className="text-sm">{contract.endDate ? formatDate(contract.endDate) : 'N/A'}</span>
                             {isExpiringSoon && (
                               <div className="text-xs text-yellow-600 font-medium mt-1">
                                 Expiring soon
@@ -293,7 +293,7 @@ export default function ContractsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(contract.amount, contract.currency)}
+                          {formatCurrency(contract.amount || 0, contract.currency || 'USD')}
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="gap-1">
