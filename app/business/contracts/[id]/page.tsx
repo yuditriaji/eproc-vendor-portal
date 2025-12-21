@@ -488,7 +488,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                                                                 {vendor?.contactEmail && <p className="text-sm text-muted-foreground">{vendor.contactEmail}</p>}
                                                                 {vendor?.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
                                                                 {vendor?.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
-                                                                {vendor?.address && <p className="text-sm text-muted-foreground">{vendor.address}</p>}
+                                                                {vendor?.contactPhone && <p className="text-sm text-muted-foreground">{vendor.contactPhone}</p>}
+                                                                {vendor?.address && (
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {typeof vendor.address === 'string'
+                                                                            ? vendor.address
+                                                                            : [vendor.address.street, vendor.address.city, vendor.address.state, vendor.address.country].filter(Boolean).join(', ')}
+                                                                    </p>
+                                                                )}
                                                                 {contractVendor?.role && (
                                                                     <Badge variant="outline" className="mt-2">{contractVendor.role}</Badge>
                                                                 )}
