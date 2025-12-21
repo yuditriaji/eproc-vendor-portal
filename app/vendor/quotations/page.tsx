@@ -2,44 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useGetQuotationsQuery, useGetRFQsQuery } from '@/store/api/procurementApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  FileSignature, 
-  Search, 
+import {
+  FileSignature,
+  Search,
   Plus,
-  Calendar, 
+  Calendar,
   DollarSign,
   Building2,
   Clock,
   CheckCircle2,
   XCircle,
-  FileEdit
+  FileEdit,
+  FileText
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 
 type QuotationStatus = 'DRAFT' | 'SUBMITTED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
 
-interface Quotation {
-  id: string;
-  quotationNumber: string;
-  requestTitle: string;
-  buyer: {
-    name: string;
-    organization: string;
-  };
-  quotedAmount: number;
-  currency: string;
-  submittedDate?: string;
-  validUntil: string;
-  status: QuotationStatus;
-  items: number;
-}
-
-const statusConfig: Record<QuotationStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }> = {
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }> = {
   DRAFT: { label: 'Draft', variant: 'outline', icon: FileEdit },
   SUBMITTED: { label: 'Submitted', variant: 'default', icon: Clock },
+  PENDING: { label: 'Pending', variant: 'default', icon: Clock },
   ACCEPTED: { label: 'Accepted', variant: 'secondary', icon: CheckCircle2 },
   REJECTED: { label: 'Rejected', variant: 'destructive', icon: XCircle },
   EXPIRED: { label: 'Expired', variant: 'outline', icon: Clock },
@@ -48,68 +37,40 @@ const statusConfig: Record<QuotationStatus, { label: string; variant: 'default' 
 export default function QuotationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<QuotationStatus | 'ALL'>('ALL');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  // Mock data - replace with real API data
-  const quotations: Quotation[] = [
-    {
-      id: '1',
-      quotationNumber: 'QUO-2025-001',
-      requestTitle: 'Network Equipment Quotation Request',
-      buyer: {
-        name: 'John Smith',
-        organization: 'IT Department'
-      },
-      quotedAmount: 85000,
-      currency: 'USD',
-      submittedDate: '2025-10-20',
-      validUntil: '2025-11-20',
-      status: 'SUBMITTED',
-      items: 5
-    },
-    {
-      id: '2',
-      quotationNumber: 'QUO-2025-002',
-      requestTitle: 'Office Furniture Supply',
-      buyer: {
-        name: 'Sarah Johnson',
-        organization: 'Administration'
-      },
-      quotedAmount: 45000,
-      currency: 'USD',
-      submittedDate: '2025-10-15',
-      validUntil: '2025-11-15',
-      status: 'ACCEPTED',
-      items: 12
-    },
-    {
-      id: '3',
-      quotationNumber: 'QUO-2025-003',
-      requestTitle: 'Software Licensing Quotation',
-      buyer: {
-        name: 'Michael Chen',
-        organization: 'Technology Services'
-      },
-      quotedAmount: 120000,
-      currency: 'USD',
-      validUntil: '2025-11-25',
-      status: 'DRAFT',
-      items: 3
-    }
-  ];
-
-  const filteredQuotations = quotations.filter(quotation => {
-    const matchesSearch = quotation.requestTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         quotation.quotationNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         quotation.buyer.organization.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || quotation.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  // Fetch vendor's quotations
+  const { data: quotationsResponse, isLoading: quotationsLoading } = useGetQuotationsQuery({
+    page,
+    pageSize,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
 
+  // Fetch published RFQs for the vendor to submit quotations to
+  const { data: rfqsResponse, isLoading: rfqsLoading } = useGetRFQsQuery({
+    page: 1,
+    pageSize: 10,
+    status: 'PUBLISHED',
+  });
+
+  const quotations = quotationsResponse?.data || [];
+  const availableRFQs = rfqsResponse?.data || [];
+  const totalPages = quotationsResponse?.meta?.totalPages || 1;
+  const isLoading = quotationsLoading;
+
+  const filteredQuotations = searchQuery
+    ? quotations.filter((quotation: any) =>
+      quotation.rfq?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      quotation.quotationNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : quotations;
+
   const stats = {
-    total: quotations.length,
-    draft: quotations.filter(q => q.status === 'DRAFT').length,
-    submitted: quotations.filter(q => q.status === 'SUBMITTED').length,
-    accepted: quotations.filter(q => q.status === 'ACCEPTED').length,
+    total: quotationsResponse?.meta?.total || quotations.length,
+    draft: quotations.filter((q: any) => q.status === 'DRAFT').length,
+    submitted: quotations.filter((q: any) => q.status === 'SUBMITTED' || q.status === 'PENDING').length,
+    accepted: quotations.filter((q: any) => q.status === 'ACCEPTED').length,
   };
 
   return (
@@ -122,12 +83,6 @@ export default function QuotationsPage() {
             Manage quotation requests and submissions
           </p>
         </div>
-        <Button asChild>
-          <Link href="/vendor/quotations/create">
-            <Plus className="h-4 w-4 mr-2" />
-            New Quotation
-          </Link>
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -137,7 +92,7 @@ export default function QuotationsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.total}</div>
           </CardContent>
         </Card>
         <Card>
@@ -145,7 +100,7 @@ export default function QuotationsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Draft</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats.draft}</div>
+            <div className="text-2xl font-bold text-gray-600">{isLoading ? '...' : stats.draft}</div>
           </CardContent>
         </Card>
         <Card>
@@ -153,7 +108,7 @@ export default function QuotationsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Submitted</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.submitted}</div>
+            <div className="text-2xl font-bold text-blue-600">{isLoading ? '...' : stats.submitted}</div>
           </CardContent>
         </Card>
         <Card>
@@ -161,10 +116,46 @@ export default function QuotationsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Accepted</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
+            <div className="text-2xl font-bold text-green-600">{isLoading ? '...' : stats.accepted}</div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Available RFQs for quotation */}
+      {availableRFQs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Available RFQs for Quotation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {rfqsLoading ? (
+                <Skeleton className="h-16" />
+              ) : (
+                availableRFQs.map((rfq: any) => (
+                  <div key={rfq.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50">
+                    <div>
+                      <p className="font-medium">{rfq.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {rfq.rfqNumber} • Valid until: {formatDate(rfq.validUntil)}
+                      </p>
+                    </div>
+                    <Button size="sm" asChild>
+                      <Link href={`/vendor/quotations/create?rfqId=${rfq.id}`}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Submit Quote
+                      </Link>
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -215,88 +206,102 @@ export default function QuotationsPage() {
 
       {/* Quotations List */}
       <div className="space-y-4">
-        {filteredQuotations.map((quotation) => {
-          const StatusIcon = statusConfig[quotation.status].icon;
-          const daysUntilExpiry = Math.ceil((new Date(quotation.validUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-          
-          return (
-            <Card key={quotation.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <FileSignature className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-lg">{quotation.requestTitle}</h3>
-                          <Badge variant={statusConfig[quotation.status].variant}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig[quotation.status].label}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {quotation.quotationNumber}
-                        </p>
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))
+        ) : filteredQuotations.length > 0 ? (
+          filteredQuotations.map((quotation: any) => {
+            const status = statusConfig[quotation.status] || statusConfig.DRAFT;
+            const StatusIcon = status.icon;
+            const validUntil = quotation.validUntil ? new Date(quotation.validUntil) : null;
+            const daysUntilExpiry = validUntil
+              ? Math.ceil((validUntil.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+              : null;
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Buyer:</span>
-                            <span className="font-medium">{quotation.buyer.organization}</span>
+            return (
+              <Card key={quotation.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileSignature className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-lg">
+                              {quotation.rfq?.title || 'Quotation'}
+                            </h3>
+                            <Badge variant={status.variant}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {status.label}
+                            </Badge>
                           </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Amount:</span>
-                            <span className="font-medium">
-                              ${quotation.quotedAmount.toLocaleString()} {quotation.currency}
-                            </span>
-                          </div>
-                          {quotation.submittedDate && (
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {quotation.quotationNumber}
+                          </p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {quotation.rfq?.purchaseRequisition && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">For RFQ:</span>
+                                <span className="font-medium">{quotation.rfq.rfqNumber}</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-2 text-sm">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">Submitted:</span>
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">Amount:</span>
                               <span className="font-medium">
-                                {new Date(quotation.submittedDate).toLocaleDateString()}
+                                {formatCurrency(quotation.totalAmount || quotation.amount || 0, 'USD')}
                               </span>
                             </div>
-                          )}
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Valid Until:</span>
-                            <span className={`font-medium ${daysUntilExpiry < 7 ? 'text-red-600' : ''}`}>
-                              {new Date(quotation.validUntil).toLocaleDateString()}
-                              {daysUntilExpiry > 0 && ` (${daysUntilExpiry} days)`}
-                            </span>
+                            {quotation.submittedAt && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Submitted:</span>
+                                <span className="font-medium">
+                                  {formatDate(quotation.submittedAt)}
+                                </span>
+                              </div>
+                            )}
+                            {validUntil && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Valid Until:</span>
+                                <span className={`font-medium ${daysUntilExpiry && daysUntilExpiry < 7 ? 'text-red-600' : ''}`}>
+                                  {formatDate(quotation.validUntil)}
+                                  {daysUntilExpiry && daysUntilExpiry > 0 && ` (${daysUntilExpiry} days)`}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex gap-2">
-                    {quotation.status === 'DRAFT' && (
-                      <Button size="sm" asChild>
-                        <Link href={`/vendor/quotations/${quotation.id}/edit`}>
-                          <FileEdit className="h-4 w-4 mr-2" />
-                          Edit
+                    <div className="flex gap-2">
+                      {quotation.status === 'DRAFT' && (
+                        <Button size="sm" asChild>
+                          <Link href={`/vendor/quotations/${quotation.id}/edit`}>
+                            <FileEdit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Link>
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/vendor/quotations/${quotation.id}`}>
+                          View Details
                         </Link>
                       </Button>
-                    )}
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/vendor/quotations/${quotation.id}`}>
-                        View Details
-                      </Link>
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {filteredQuotations.length === 0 && (
+                </CardContent>
+              </Card>
+            );
+          })
+        ) : (
           <Card>
             <CardContent className="p-12 text-center">
               <FileSignature className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -306,18 +311,38 @@ export default function QuotationsPage() {
                   ? 'Try adjusting your search or filters'
                   : 'You haven\'t created any quotations yet'}
               </p>
-              {!searchQuery && statusFilter === 'ALL' && (
-                <Button asChild>
-                  <Link href="/vendor/quotations/create">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Quotation
-                  </Link>
-                </Button>
+              {availableRFQs.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Check the "Available RFQs" section above to submit a quotation
+                </p>
               )}
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

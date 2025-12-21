@@ -4,76 +4,51 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Send, FileCheck, TrendingUp, ArrowRight, Calendar, DollarSign, AlertCircle, Clock } from 'lucide-react';
-import { useGetDashboardStatsQuery } from '@/store/api/procurementApi';
+import { FileText, Send, FileCheck, TrendingUp, ArrowRight, Calendar, DollarSign, Clock } from 'lucide-react';
+import { useGetDashboardStatsQuery, useGetTendersQuery } from '@/store/api/procurementApi';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
-  const { data: statsResponse, isLoading } = useGetDashboardStatsQuery();
+  const { data: statsResponse, isLoading: statsLoading } = useGetDashboardStatsQuery();
   const stats = statsResponse?.data;
+
+  // Fetch real recent tenders
+  const { data: tendersResponse, isLoading: tendersLoading } = useGetTendersQuery({
+    page: 1,
+    pageSize: 5,
+    status: 'PUBLISHED',
+  });
+  const recentTenders = tendersResponse?.data || [];
 
   const statCards = [
     {
       title: 'Active Tenders',
       value: stats?.activeTenders ?? 0,
       icon: FileText,
-      trend: '+2 this week',
+      trend: 'Published tenders',
       trendUp: true,
     },
     {
       title: 'My Bids',
       value: stats?.totalBids ?? 0,
       icon: Send,
-      trend: '+3 this month',
+      trend: 'Total submitted',
       trendUp: true,
     },
     {
       title: 'Contracts',
       value: stats?.contracts ?? 0,
       icon: FileCheck,
-      trend: '2 pending approval',
+      trend: 'Active contracts',
       trendUp: false,
     },
     {
       title: 'Success Rate',
       value: `${stats?.successRate ?? 0}%`,
       icon: TrendingUp,
-      trend: '+5% this quarter',
+      trend: 'Win ratio',
       trendUp: true,
-    },
-  ];
-
-  // Mock recent tenders - replace with real API data
-  const recentTenders = [
-    {
-      id: '1',
-      title: 'Office Supplies Procurement for Q1 2025',
-      organization: 'Ministry of Finance',
-      closingDate: '2025-11-05',
-      estimatedValue: 125000,
-      currency: 'USD',
-      status: 'PUBLISHED' as const,
-      daysRemaining: 9,
-    },
-    {
-      id: '2',
-      title: 'IT Infrastructure Upgrade Project',
-      organization: 'Department of Technology',
-      closingDate: '2025-11-10',
-      estimatedValue: 450000,
-      currency: 'USD',
-      status: 'PUBLISHED' as const,
-      daysRemaining: 14,
-    },
-    {
-      id: '3',
-      title: 'Annual Maintenance Services Contract',
-      organization: 'Public Works Department',
-      closingDate: '2025-11-02',
-      estimatedValue: 85000,
-      currency: 'USD',
-      status: 'PUBLISHED' as const,
-      daysRemaining: 6,
     },
   ];
 
@@ -103,11 +78,10 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {isLoading ? '...' : stat.value}
+                  {statsLoading ? '...' : stat.value}
                 </div>
-                <p className={`text-xs mt-1 flex items-center gap-1 ${
-                  stat.trendUp ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
-                }`}>
+                <p className={`text-xs mt-1 flex items-center gap-1 ${stat.trendUp ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
+                  }`}>
                   {stat.trendUp && <TrendingUp className="h-3 w-3" />}
                   {stat.trend}
                 </p>
@@ -137,41 +111,62 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentTenders.map((tender) => (
-                  <div
-                    key={tender.id}
-                    className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors group cursor-pointer"
-                    onClick={() => window.location.href = `/vendor/tenders/${tender.id}`}
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-semibold group-hover:text-primary transition-colors">
-                        {tender.title}
-                      </h3>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Closing: {formatDate(tender.closingDate)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {formatCurrency(tender.estimatedValue, tender.currency)}
-                        </span>
+                {tendersLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20" />
+                  ))
+                ) : recentTenders.length > 0 ? (
+                  recentTenders.map((tender: any) => {
+                    const closingDate = tender.closingDate || tender.submissionDeadline;
+                    const daysRemaining = closingDate
+                      ? Math.ceil((new Date(closingDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                      : null;
+
+                    return (
+                      <div
+                        key={tender.id}
+                        className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors group cursor-pointer"
+                        onClick={() => window.location.href = `/vendor/tenders/${tender.id}`}
+                      >
+                        <div className="flex-1">
+                          <h3 className="font-semibold group-hover:text-primary transition-colors">
+                            {tender.title}
+                          </h3>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                            {closingDate && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Closing: {formatDate(closingDate)}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              {formatCurrency(tender.estimatedValue || tender.budget || 0, tender.currency?.code || 'USD')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {tender.tenderNumber}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Badge variant="default">Published</Badge>
+                          {daysRemaining !== null && (
+                            <span className={`text-xs flex items-center gap-1 ${daysRemaining <= 7 ? 'text-red-600 font-medium' : 'text-muted-foreground'
+                              }`}>
+                              <Clock className="h-3 w-3" />
+                              {daysRemaining > 0 ? `${daysRemaining} days left` : 'Closing soon'}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {tender.organization}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge variant="default">Published</Badge>
-                      <span className={`text-xs flex items-center gap-1 ${
-                        tender.daysRemaining <= 7 ? 'text-red-600 font-medium' : 'text-muted-foreground'
-                      }`}>
-                        <Clock className="h-3 w-3" />
-                        {tender.daysRemaining} days left
-                      </span>
-                    </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No active tenders available</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -192,9 +187,9 @@ export default function DashboardPage() {
                 </Link>
               </Button>
               <Button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/vendor/bids/new">
+                <Link href="/vendor/quotations">
                   <Send className="mr-2 h-4 w-4" />
-                  Submit New Bid
+                  View Quotations
                 </Link>
               </Button>
               <Button className="w-full justify-start" variant="outline" asChild>
@@ -212,22 +207,11 @@ export default function DashboardPage() {
               <CardTitle className="text-base">Alerts & Reminders</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200">
-                    2 Bids Need Attention
-                  </p>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                    Complete missing documents before submission deadline
-                  </p>
-                </div>
-              </div>
               <div className="flex gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <Clock className="h-5 w-5 text-blue-600 dark:text-blue-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                    3 Tenders Closing Soon
+                    {recentTenders.length} Active Tenders
                   </p>
                   <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                     Review opportunities before deadlines

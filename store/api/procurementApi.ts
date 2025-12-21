@@ -136,6 +136,37 @@ export const procurementApi = baseApi.injectEndpoints({
     }),
 
     // ========================================================================
+    // Quotations Endpoints - Vendor Quotation Submissions
+    // ========================================================================
+    getQuotations: builder.query<
+      { data: any[]; meta: { total: number; page: number; pageSize: number; totalPages: number } },
+      { page?: number; pageSize?: number; status?: string; rfqId?: string }
+    >({
+      query: ({ pageSize, ...rest }) => ({
+        url: 'quotations',
+        params: { ...rest, limit: pageSize },
+      }),
+      providesTags: ['Quotations'],
+    }),
+
+    getQuotationById: builder.query<ApiResponse<any>, string>({
+      query: (id) => `quotations/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'Quotations', id }],
+    }),
+
+    createQuotation: builder.mutation<
+      ApiResponse<any>,
+      { rfqId: string; amount: number; items: any[]; validUntil?: string; notes?: string }
+    >({
+      query: (data) => ({
+        url: 'quotations',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Quotations', 'RFQs'],
+    }),
+
+    // ========================================================================
     // P2P Sourcing Workflow Endpoints
     // ========================================================================
     createRFQFromPR: builder.mutation<
@@ -224,6 +255,10 @@ export const {
   useCloseRFQMutation,
   useCancelRFQMutation,
   useDeleteRFQMutation,
+  // Quotations
+  useGetQuotationsQuery,
+  useGetQuotationByIdQuery,
+  useCreateQuotationMutation,
   // P2P Sourcing Workflows
   useCreateRFQFromPRMutation,
   useCreateTenderFromPRMutation,
