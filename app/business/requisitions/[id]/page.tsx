@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useGetPurchaseRequisitionByIdQuery, useUpdatePurchaseRequisitionMutation } from '@/store/api/businessApi';
 import { useApprovePRInWorkflowMutation, useCreatePOFromPRMutation } from '@/store/api/workflowApi';
 import { useCreateRFQFromPRMutation, useCreateTenderFromPRMutation } from '@/store/api/procurementApi';
@@ -51,6 +52,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 export default function RequisitionDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { toast } = useToast();
+    const router = useRouter();
     const [approvalReason, setApprovalReason] = useState('');
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -156,7 +158,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
 
     const handleCreateRFQ = async () => {
         try {
-            await createRFQFromPR({
+            const result: any = await createRFQFromPR({
                 prId: id,
                 data: {
                     title: pr.title,
@@ -170,7 +172,13 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                 title: 'Success',
                 description: 'RFQ created from this Purchase Requisition',
             });
-            refetch();
+            // Navigate to the new RFQ
+            const rfqId = result?.data?.id;
+            if (rfqId) {
+                router.push(`/business/rfq/${rfqId}`);
+            } else {
+                refetch();
+            }
         } catch (error: any) {
             toast({
                 title: 'Error',
@@ -182,7 +190,7 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
 
     const handleCreateTender = async () => {
         try {
-            await createTenderFromPR({
+            const result: any = await createTenderFromPR({
                 prId: id,
                 data: {
                     title: pr.title,
@@ -196,7 +204,13 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                 title: 'Success',
                 description: 'Tender created from this Purchase Requisition',
             });
-            refetch();
+            // Navigate to the new Tender
+            const tenderId = result?.data?.id;
+            if (tenderId) {
+                router.push(`/business/tenders/${tenderId}`);
+            } else {
+                refetch();
+            }
         } catch (error: any) {
             toast({
                 title: 'Error',
