@@ -468,36 +468,48 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                             <CardDescription>Vendors associated with this contract</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {contract.vendors && contract.vendors.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {contract.vendors.map((contractVendor: any, index: number) => {
-                                        const vendor = contractVendor.vendor || contractVendor;
-                                        return (
-                                            <div key={vendor?.id || index} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <p className="font-medium">{vendor?.name || vendor?.companyName || 'Unknown Vendor'}</p>
-                                                        {vendor?.contactEmail && <p className="text-sm text-muted-foreground">{vendor.contactEmail}</p>}
-                                                        {vendor?.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
-                                                        {vendor?.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
-                                                        {vendor?.address && <p className="text-sm text-muted-foreground">{vendor.address}</p>}
-                                                        {contractVendor.role && (
-                                                            <Badge variant="outline" className="mt-2">{contractVendor.role}</Badge>
-                                                        )}
+                            {(() => {
+                                // Debug: log vendors data
+                                console.log('Contract vendors:', contract.vendors);
+
+                                const vendorsList = contract.vendors || [];
+
+                                if (vendorsList.length > 0) {
+                                    return (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {vendorsList.map((contractVendor: any, index: number) => {
+                                                const vendor = contractVendor?.vendor || contractVendor;
+                                                console.log('ContractVendor:', contractVendor, 'Vendor:', vendor);
+                                                return (
+                                                    <div key={vendor?.id || `vendor-${index}`} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+                                                        <div className="flex items-start justify-between">
+                                                            <div>
+                                                                <p className="font-medium">{vendor?.name || vendor?.companyName || 'Unknown Vendor'}</p>
+                                                                {vendor?.contactEmail && <p className="text-sm text-muted-foreground">{vendor.contactEmail}</p>}
+                                                                {vendor?.email && <p className="text-sm text-muted-foreground">{vendor.email}</p>}
+                                                                {vendor?.phone && <p className="text-sm text-muted-foreground">{vendor.phone}</p>}
+                                                                {vendor?.address && <p className="text-sm text-muted-foreground">{vendor.address}</p>}
+                                                                {contractVendor?.role && (
+                                                                    <Badge variant="outline" className="mt-2">{contractVendor.role}</Badge>
+                                                                )}
+                                                            </div>
+                                                            {vendor?.id && (
+                                                                <Button variant="ghost" size="sm" asChild>
+                                                                    <Link href={`/business/vendors/${vendor.id}`}>View</Link>
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    {vendor?.id && (
-                                                        <Button variant="ghost" size="sm" asChild>
-                                                            <Link href={`/business/vendors/${vendor.id}`}>View</Link>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground text-center py-8">No vendors associated with this contract</p>
-                            )}
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <p className="text-muted-foreground text-center py-8">No vendors associated with this contract</p>
+                                );
+                            })()}
                         </CardContent>
                     </Card>
                 </TabsContent>
