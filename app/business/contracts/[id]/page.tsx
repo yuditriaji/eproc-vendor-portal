@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { useGetContractByIdQuery, useTerminateContractMutation, useCloseContractMutation } from '@/store/api/businessApi';
+import { useGetContractByIdQuery, useTerminateContractMutation, useCloseContractMutation, useApproveContractMutation } from '@/store/api/businessApi';
 import { useCreateTenderFromContractMutation, useInitiateProcurementWorkflowMutation } from '@/store/api/workflowApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const { data: contractResponse, isLoading } = useGetContractByIdQuery(id);
     const [terminateContract, { isLoading: isTerminating }] = useTerminateContractMutation();
     const [closeContract, { isLoading: isClosing }] = useCloseContractMutation();
+    const [approveContract, { isLoading: isApproving }] = useApproveContractMutation();
     const [createTender, { isLoading: isCreatingTender }] = useCreateTenderFromContractMutation();
     const [initiateProcurement, { isLoading: isInitiating }] = useInitiateProcurementWorkflowMutation();
 
@@ -102,6 +103,22 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             toast({
                 title: 'Error',
                 description: error?.data?.message || 'Failed to close contract',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    const handleApprove = async (approved: boolean) => {
+        try {
+            await approveContract({ id, approved }).unwrap();
+            toast({
+                title: 'Success',
+                description: approved ? 'Contract approved and activated' : 'Contract rejected',
+            });
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error?.data?.message || 'Failed to process approval',
                 variant: 'destructive',
             });
         }
@@ -201,6 +218,28 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                    {/* Approve/Reject buttons for DRAFT or PENDING_APPROVAL contracts */}
+                    {(contract.status === 'DRAFT' || contract.status === 'PENDING_APPROVAL') && (
+                        <>
+                            <Button
+                                onClick={() => handleApprove(true)}
+                                disabled={isApproving}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                {isApproving ? 'Processing...' : 'Approve Contract'}
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => handleApprove(false)}
+                                disabled={isApproving}
+                            >
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Reject
+                            </Button>
+                        </>
+                    )}
+
                     {canCreateTender && (
                         <Dialog open={isCreateTenderOpen} onOpenChange={setIsCreateTenderOpen}>
                             <DialogTrigger asChild>

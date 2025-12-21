@@ -279,6 +279,23 @@ export const businessApi = baseApi.injectEndpoints({
       ],
     }),
 
+    approveContract: builder.mutation<
+      ApiResponse<Contract>,
+      { id: string; approved: boolean; comments?: string }
+    >({
+      query: ({ id, approved, comments }) => ({
+        url: `contracts/${id}/approve`,
+        method: 'POST',
+        body: { approved, comments },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Contracts', id },
+        'Contracts',
+        'BusinessDashboard',
+        'Approvals',
+      ],
+    }),
+
     // ===== GOODS RECEIPTS =====
     getGoodsReceipts: builder.query<
       PaginatedResponse<GoodsReceipt>,
@@ -475,6 +492,7 @@ export const {
   useUpdateContractStatusMutation,
   useCloseContractMutation,
   useTerminateContractMutation,
+  useApproveContractMutation,
 
   // Goods Receipts
   useGetGoodsReceiptsQuery,
