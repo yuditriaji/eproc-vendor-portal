@@ -168,18 +168,26 @@ export default function RequisitionDetailPage({ params }: { params: Promise<{ id
                     targetVendorIds: [],
                 },
             }).unwrap();
+
+            console.log('[Create RFQ] Full response:', JSON.stringify(result, null, 2));
+            console.log('[Create RFQ] result.data:', result?.data);
+            console.log('[Create RFQ] result.data?.id:', result?.data?.id);
+
             toast({
                 title: 'Success',
                 description: 'RFQ created from this Purchase Requisition',
             });
             // Navigate to the new RFQ
             const rfqId = result?.data?.id;
+            console.log('[Create RFQ] Navigating to RFQ ID:', rfqId);
             if (rfqId) {
                 router.push(`/business/rfq/${rfqId}`);
             } else {
+                console.warn('[Create RFQ] No RFQ ID found in response, staying on page');
                 refetch();
             }
         } catch (error: any) {
+            console.error('[Create RFQ] Error:', error);
             toast({
                 title: 'Error',
                 description: error?.data?.message || 'Failed to create RFQ',
