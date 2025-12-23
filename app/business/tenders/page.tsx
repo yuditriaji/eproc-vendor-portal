@@ -61,7 +61,7 @@ export default function BusinessTendersPage() {
     status: statusFilter === 'all' ? undefined : statusFilter,
     search: searchQuery || undefined,
   });
-  
+
   // Fetch tender statistics from backend
   const { data: statsResponse, isLoading: statsLoading } = useGetTenderStatisticsQuery();
   const tenderStats = statsResponse?.data?.summary;
@@ -114,7 +114,7 @@ export default function BusinessTendersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {statsLoading ? '...' : tenderStats?.activeTenders || 0}
+              {statsLoading ? '...' : tenderStats?.publishedTenders || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Published tenders</p>
           </CardContent>
