@@ -142,6 +142,16 @@ export function canAccess(user: User | null, requiredRoles: string[]): boolean {
  */
 export function isOwnBid(bid: any, user: User | null): boolean {
   if (!user || !isVendor(user)) return false;
+
+  // Compare by vendor email since vendorId is the Vendor table ID, not User ID
+  const vendorEmail = bid?.vendor?.contactEmail || bid?.vendor?.email;
+  const userEmail = user.email;
+
+  if (vendorEmail && userEmail) {
+    return vendorEmail.toLowerCase() === userEmail.toLowerCase();
+  }
+
+  // Fallback to ID comparison
   return bid?.vendorId === user.id || bid?.vendor?.id === user.id;
 }
 
@@ -153,6 +163,15 @@ export function isOwnBid(bid: any, user: User | null): boolean {
  */
 export function isAssignedContract(contract: any, user: User | null): boolean {
   if (!user || !isVendor(user)) return false;
+
+  // Compare by vendor email since vendorId is the Vendor table ID, not User ID
+  const vendorEmail = contract?.vendor?.contactEmail || contract?.vendor?.email;
+  const userEmail = user.email;
+
+  if (vendorEmail && userEmail) {
+    return vendorEmail.toLowerCase() === userEmail.toLowerCase();
+  }
+
   return contract?.vendorId === user.id || contract?.vendor?.id === user.id;
 }
 
@@ -164,6 +183,14 @@ export function isAssignedContract(contract: any, user: User | null): boolean {
  */
 export function isOwnInvoice(invoice: any, user: User | null): boolean {
   if (!user || !isVendor(user)) return false;
+
+  const vendorEmail = invoice?.vendor?.contactEmail || invoice?.vendor?.email;
+  const userEmail = user.email;
+
+  if (vendorEmail && userEmail) {
+    return vendorEmail.toLowerCase() === userEmail.toLowerCase();
+  }
+
   return invoice?.vendorId === user.id || invoice?.vendor?.id === user.id;
 }
 
@@ -175,6 +202,14 @@ export function isOwnInvoice(invoice: any, user: User | null): boolean {
  */
 export function isOwnPayment(payment: any, user: User | null): boolean {
   if (!user || !isVendor(user)) return false;
+
+  const vendorEmail = payment?.vendor?.contactEmail || payment?.vendor?.email;
+  const userEmail = user.email;
+
+  if (vendorEmail && userEmail) {
+    return vendorEmail.toLowerCase() === userEmail.toLowerCase();
+  }
+
   return payment?.vendorId === user.id || payment?.vendor?.id === user.id;
 }
 
