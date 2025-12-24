@@ -26,7 +26,7 @@ export const procurementApi = baseApi.injectEndpoints({
     // Bids
     getBids: builder.query<
       PaginatedResponse<Bid>,
-      { page?: number; pageSize?: number; status?: string; tenderId?: string }
+      { page?: number; pageSize?: number; status?: string; tenderId?: string; search?: string }
     >({
       query: (params) => ({
         url: 'bids',

@@ -27,20 +27,22 @@ export default function MyBidsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  
+
   // VENDOR RBAC: Get current user for ownership validation
   const user = useSelector((state: RootState) => state.auth.user);
 
+  // Pass search to backend for server-side filtering
   const { data: bidsResponse, isLoading } = useGetBidsQuery({
     page,
     pageSize,
     status: statusFilter === 'all' ? undefined : statusFilter,
+    search: searchQuery || undefined,
   });
 
   // VENDOR RBAC: Filter to only show vendor's own bids (defense in depth)
   const bids = useMemo(() => {
     const rawBids = bidsResponse?.data || [];
-    
+
     // Validate all bids belong to current vendor
     const ownBids = rawBids.filter((bid) => {
       const isOwn = isOwnBid(bid, user);
@@ -52,15 +54,12 @@ export default function MyBidsPage() {
       }
       return isOwn;
     });
-    
+
     return ownBids;
   }, [bidsResponse?.data, user]);
-  const filteredBids = searchQuery
-    ? bids.filter((bid) =>
-        bid.tender?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        bid.referenceNumber?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : bids;
+
+  // Use bids directly since server handles search filtering now
+  const filteredBids = bids;
 
   const totalPages = bidsResponse?.meta?.totalPages || 1;
 
