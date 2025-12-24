@@ -25,8 +25,11 @@ export default function BidDetailPage() {
     const id = params.id as string;
     const { toast } = useToast();
 
-    const { data: bidResponse, isLoading } = useGetBidByIdQuery(id);
+    const { data: bidResponse, isLoading, error } = useGetBidByIdQuery(id);
     const [submitBid, { isLoading: isSubmitting }] = useSubmitBidMutation();
+
+    // Debug logging
+    console.log('Bid detail page - id:', id, 'response:', bidResponse, 'error:', error);
 
     const bid = bidResponse?.data;
 
@@ -39,7 +42,8 @@ export default function BidDetailPage() {
         );
     }
 
-    if (!bid) {
+    if (error || !bid) {
+        console.log('Bid not found or error:', error);
         return (
             <div className="p-6">
                 <Card className="border-destructive">
