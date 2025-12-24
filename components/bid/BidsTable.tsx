@@ -108,13 +108,21 @@ export function BidsTable({ bids }: BidsTableProps) {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row.original.bidAmount
-              ? formatCurrency(row.original.bidAmount, row.original.currency)
-              : 'N/A'}
-          </div>
-        ),
+        cell: ({ row }) => {
+          // Handle Prisma Decimal which might come as string or object
+          const amount = row.original.bidAmount;
+          const parsed = amount
+            ? (typeof amount === 'object' ? Number(amount) : parseFloat(String(amount)))
+            : (row.original as any).financialProposal?.totalAmount;
+
+          return (
+            <div className="font-medium">
+              {parsed && !isNaN(parsed)
+                ? formatCurrency(parsed, row.original.currency || 'USD')
+                : 'N/A'}
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'submittedAt',
@@ -133,8 +141,8 @@ export function BidsTable({ bids }: BidsTableProps) {
             {row.original.submittedAt
               ? formatDate(row.original.submittedAt)
               : row.original.status === 'DRAFT'
-              ? 'Not submitted'
-              : 'N/A'}
+                ? 'Not submitted'
+                : 'N/A'}
           </div>
         ),
       },
@@ -265,7 +273,15 @@ export function BidsTable({ bids }: BidsTableProps) {
                 <div className="flex items-center justify-between text-sm mt-3 pt-3 border-t">
                   <span className="text-muted-foreground">Bid Amount</span>
                   <span className="font-medium">
-                    {bid.bidAmount ? formatCurrency(bid.bidAmount, bid.currency) : 'N/A'}
+                    {(() => {
+                      const amount = bid.bidAmount;
+                      const parsed = amount
+                        ? (typeof amount === 'object' ? Number(amount) : parseFloat(String(amount)))
+                        : (bid as any).financialProposal?.totalAmount;
+                      return parsed && !isNaN(parsed)
+                        ? formatCurrency(parsed, bid.currency || 'USD')
+                        : 'N/A';
+                    })()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-2">
