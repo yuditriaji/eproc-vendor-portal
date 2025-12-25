@@ -85,13 +85,17 @@ export default function CreateBudgetPage() {
       return;
     }
 
+    const payload = {
+      fiscalYear: formData.fiscalYear,
+      totalAmount: parseFloat(formData.totalAmount),
+      orgUnitId: formData.orgUnitId,
+      type: formData.type as 'DIVISION' | 'DEPARTMENT' | 'STAFF' | 'PROJECT',
+    };
+
+    console.log('[Budget Create] Sending payload:', JSON.stringify(payload, null, 2));
+
     try {
-      await createBudget({
-        fiscalYear: formData.fiscalYear,
-        totalAmount: parseFloat(formData.totalAmount),
-        orgUnitId: formData.orgUnitId,
-        type: formData.type,
-      } as any).unwrap();
+      await createBudget(payload as any).unwrap();
       toast.success('Budget created successfully');
       router.push('/business/budgets');
     } catch (error: any) {
