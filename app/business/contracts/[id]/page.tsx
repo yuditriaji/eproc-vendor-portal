@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { useGetContractByIdQuery, useTerminateContractMutation, useCloseContractMutation, useApproveContractMutation } from '@/store/api/businessApi';
-import { useCreateTenderFromContractMutation, useInitiateProcurementWorkflowMutation } from '@/store/api/workflowApi';
+// Legacy imports removed - tenders/RFQs now come from PR, not contract
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,8 +17,6 @@ import {
     Clock,
     XCircle,
     CheckCircle,
-    Send,
-    ShoppingCart,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,8 +31,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+// Input and Label removed - no longer needed after legacy dialog removal
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -55,21 +52,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const [terminateReason, setTerminateReason] = useState('');
     const [isTerminateDialogOpen, setIsTerminateDialogOpen] = useState(false);
     const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
-    const [isCreateTenderOpen, setIsCreateTenderOpen] = useState(false);
-    const [isInitiateProcurementOpen, setIsInitiateProcurementOpen] = useState(false);
-    const [tenderData, setTenderData] = useState({
-        title: '',
-        description: '',
-        closingDate: '',
-        estimatedValue: '',
-    });
+    // Legacy states removed - in PR-First workflow, contracts are created AFTER award
 
     const { data: contractResponse, isLoading } = useGetContractByIdQuery(id);
     const [terminateContract, { isLoading: isTerminating }] = useTerminateContractMutation();
     const [closeContract, { isLoading: isClosing }] = useCloseContractMutation();
     const [approveContract, { isLoading: isApproving }] = useApproveContractMutation();
-    const [createTender, { isLoading: isCreatingTender }] = useCreateTenderFromContractMutation();
-    const [initiateProcurement, { isLoading: isInitiating }] = useInitiateProcurementWorkflowMutation();
+    // Legacy mutations removed - tenders/RFQs now come from PR, not contract
 
     const contract = contractResponse?.data;
 
@@ -124,52 +113,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         }
     };
 
-    const handleCreateTender = async () => {
-        try {
-            await createTender({
-                contractId: id,
-                data: {
-                    title: tenderData.title || `Tender for ${contract?.title}`,
-                    description: tenderData.description,
-                    closingDate: tenderData.closingDate,
-                    estimatedValue: parseFloat(tenderData.estimatedValue) || undefined,
-                    requirements: {},
-                    criteria: {},
-                },
-            }).unwrap();
-            toast({
-                title: 'Success',
-                description: 'Tender created successfully from contract',
-            });
-            setIsCreateTenderOpen(false);
-            setTenderData({ title: '', description: '', closingDate: '', estimatedValue: '' });
-        } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error?.data?.message || 'Failed to create tender',
-                variant: 'destructive',
-            });
-        }
-    };
-
-    const handleInitiateProcurement = async () => {
-        try {
-            await initiateProcurement({ contractId: id }).unwrap();
-            toast({
-                title: 'Success',
-                description: 'Procurement workflow initiated. Redirecting to create Purchase Requisition...',
-            });
-            setIsInitiateProcurementOpen(false);
-            // Navigate to PR creation page
-            window.location.href = `/business/requisitions/create?contractId=${id}`;
-        } catch (error: any) {
-            toast({
-                title: 'Error',
-                description: error?.data?.message || 'Failed to initiate procurement',
-                variant: 'destructive',
-            });
-        }
-    };
+    // Legacy handleCreateTender and handleInitiateProcurement removed - PR-First workflow
 
     if (isLoading) {
         return (
@@ -197,8 +141,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     const isActive = contract.status === 'ACTIVE' || contract.status === 'IN_PROGRESS';
     const canTerminate = isActive || contract.status === 'PENDING_APPROVAL';
     const canClose = contract.status === 'COMPLETED';
-    const canCreateTender = isActive;
-    const canInitiateProcurement = isActive;
+    // Legacy canCreateTender/canInitiateProcurement removed - contracts are now OUTPUT not INPUT
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -242,100 +185,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                         </>
                     )}
 
-                    {canCreateTender && (
-                        <Dialog open={isCreateTenderOpen} onOpenChange={setIsCreateTenderOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="outline">
-                                    <Send className="mr-2 h-4 w-4" />
-                                    Create Tender
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Create Tender from Contract</DialogTitle>
-                                    <DialogDescription>
-                                        Create a new tender associated with this contract.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="tender-title">Tender Title</Label>
-                                        <Input
-                                            id="tender-title"
-                                            placeholder={`Tender for ${contract.title}`}
-                                            value={tenderData.title}
-                                            onChange={(e) => setTenderData({ ...tenderData, title: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="tender-desc">Description</Label>
-                                        <Textarea
-                                            id="tender-desc"
-                                            placeholder="Tender description..."
-                                            value={tenderData.description}
-                                            onChange={(e) => setTenderData({ ...tenderData, description: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="tender-closing">Closing Date</Label>
-                                            <Input
-                                                id="tender-closing"
-                                                type="date"
-                                                value={tenderData.closingDate}
-                                                onChange={(e) => setTenderData({ ...tenderData, closingDate: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="tender-value">Estimated Value</Label>
-                                            <Input
-                                                id="tender-value"
-                                                type="number"
-                                                placeholder="0.00"
-                                                value={tenderData.estimatedValue}
-                                                onChange={(e) => setTenderData({ ...tenderData, estimatedValue: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsCreateTenderOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={handleCreateTender} disabled={isCreatingTender}>
-                                        Create Tender
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    )}
-
-                    {canInitiateProcurement && (
-                        <Dialog open={isInitiateProcurementOpen} onOpenChange={setIsInitiateProcurementOpen}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <ShoppingCart className="mr-2 h-4 w-4" />
-                                    Start Procurement
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Initiate Procurement Workflow</DialogTitle>
-                                    <DialogDescription>
-                                        This will start a procurement workflow (PR → PO → GR → Invoice → Payment) linked to this contract.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsInitiateProcurementOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={handleInitiateProcurement} disabled={isInitiating}>
-                                        Start Workflow
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    )}
+                    {/* Legacy Create Tender and Start Procurement dialogs removed - in PR-First workflow */}
 
                     {canClose && (
                         <Dialog open={isCloseDialogOpen} onOpenChange={setIsCloseDialogOpen}>
