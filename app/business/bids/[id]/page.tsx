@@ -2,14 +2,14 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { useGetBidByIdQuery, useScoreBidMutation } from '@/store/api/businessApi';
+import { useGetBidByIdQuery, useScoreBidMutation, useAcceptBidMutation, useRejectBidMutation } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, Star, CheckCircle, XCircle, Trophy } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -35,10 +35,46 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
   });
   const [comments, setComments] = useState('');
 
-  const { data: bidResponse, isLoading } = useGetBidByIdQuery(id);
+  const { data: bidResponse, isLoading, refetch } = useGetBidByIdQuery(id);
   const [scoreBid, { isLoading: isScoring }] = useScoreBidMutation();
+  const [acceptBid, { isLoading: isAccepting }] = useAcceptBidMutation();
+  const [rejectBid, { isLoading: isRejecting }] = useRejectBidMutation();
 
   const bid = bidResponse?.data;
+
+  const handleAcceptBid = async () => {
+    try {
+      await acceptBid({ id, notes: comments || undefined }).unwrap();
+      toast({
+        title: 'Success',
+        description: 'Bid accepted! You can now create a contract with this vendor.',
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to accept bid',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRejectBid = async () => {
+    try {
+      await rejectBid({ id, reason: comments || undefined }).unwrap();
+      toast({
+        title: 'Success',
+        description: 'Bid rejected.',
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to reject bid',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleSubmitScore = async () => {
     try {
@@ -179,6 +215,76 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
               </div>
             </div>
           </CardHeader>
+        </Card>
+      )}
+
+      {/* Winner Badge for Accepted Bids */}
+      {bid.status === 'ACCEPTED' && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950/10">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-center gap-3">
+              <Trophy className="h-8 w-8 text-green-600" />
+              <span className="text-2xl font-bold text-green-600">Winner - Bid Accepted!</span>
+            </div>
+            <p className="text-center text-muted-foreground mt-2">
+              You can now create a contract with this vendor.
+            </p>
+            <div className="flex justify-center mt-4">
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <Link href={`/business/contracts/new?bidId=${bid.id}&vendorId=${bid.vendorId}`}>
+                  Create Contract
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rejected Badge */}
+      {bid.status === 'REJECTED' && (
+        <Card className="border-red-500 bg-red-50 dark:bg-red-950/10">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-center gap-3">
+              <XCircle className="h-8 w-8 text-red-600" />
+              <span className="text-2xl font-bold text-red-600">Bid Rejected</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Accept/Reject Actions for Evaluated Bids */}
+      {bid.status === 'EVALUATED' && (
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-blue-600" />
+              Decision Required
+            </CardTitle>
+            <CardDescription>
+              This bid has been evaluated. Accept it to award the contract or reject it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Button
+                onClick={handleAcceptBid}
+                disabled={isAccepting}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {isAccepting ? 'Accepting...' : 'Accept Bid'}
+              </Button>
+              <Button
+                onClick={handleRejectBid}
+                disabled={isRejecting}
+                variant="destructive"
+                className="flex-1"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                {isRejecting ? 'Rejecting...' : 'Reject Bid'}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       )}
 

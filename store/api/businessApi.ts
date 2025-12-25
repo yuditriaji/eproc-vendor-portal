@@ -457,6 +457,32 @@ export const businessApi = baseApi.injectEndpoints({
         'BusinessDashboard',
       ],
     }),
+
+    acceptBid: builder.mutation<ApiResponse<any>, { id: string; notes?: string }>({
+      query: ({ id, notes }) => ({
+        url: `bids/${id}/accept`,
+        method: 'POST',
+        body: { notes },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Bids', id },
+        'Bids',
+        'BusinessDashboard',
+      ],
+    }),
+
+    rejectBid: builder.mutation<ApiResponse<any>, { id: string; reason?: string }>({
+      query: ({ id, reason }) => ({
+        url: `bids/${id}/reject`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Bids', id },
+        'Bids',
+        'BusinessDashboard',
+      ],
+    }),
   }),
 });
 
@@ -516,4 +542,6 @@ export const {
   useGetBidsQuery,
   useGetBidByIdQuery,
   useScoreBidMutation,
+  useAcceptBidMutation,
+  useRejectBidMutation,
 } = businessApi;
