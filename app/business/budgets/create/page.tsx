@@ -32,8 +32,17 @@ export default function CreateBudgetPage() {
   const { data: companyCodesResponse, isLoading: loadingCompanyCodes } = useGetCompanyCodesQuery();
   const { data: purchasingGroupsResponse, isLoading: loadingPurchasingGroups } = useGetPurchasingGroupsQuery();
 
-  const companyCodes = companyCodesResponse?.data || [];
-  const purchasingGroups = purchasingGroupsResponse?.data || [];
+  // Handle both array response and {data: []} response formats
+  const companyCodes = Array.isArray(companyCodesResponse)
+    ? companyCodesResponse
+    : (companyCodesResponse?.data || []);
+  const purchasingGroups = Array.isArray(purchasingGroupsResponse)
+    ? purchasingGroupsResponse
+    : (purchasingGroupsResponse?.data || []);
+
+  // Debug: log API responses
+  console.log('[Budget Create] Company Codes Response:', companyCodesResponse);
+  console.log('[Budget Create] Company Codes Parsed:', companyCodes);
 
   const [formData, setFormData] = useState({
     name: '',
