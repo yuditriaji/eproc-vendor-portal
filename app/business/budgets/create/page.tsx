@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { useCreateBudgetMutation } from '@/store/api/financeApi';
+import { useGetCompanyCodesQuery, useGetPurchasingGroupsQuery } from '@/store/api/orgApi';
 import { canManageBudget } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -26,6 +27,13 @@ export default function CreateBudgetPage() {
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
   const [createBudget, { isLoading }] = useCreateBudgetMutation();
+
+  // Fetch real organization data
+  const { data: companyCodesResponse, isLoading: loadingCompanyCodes } = useGetCompanyCodesQuery();
+  const { data: purchasingGroupsResponse, isLoading: loadingPurchasingGroups } = useGetPurchasingGroupsQuery();
+
+  const companyCodes = companyCodesResponse?.data || [];
+  const purchasingGroups = purchasingGroupsResponse?.data || [];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -144,22 +152,40 @@ export default function CreateBudgetPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">Department *</Label>
+                <Label htmlFor="department">Department / Company Code *</Label>
                 <Select
                   value={formData.department}
                   onValueChange={(value) => handleChange('department', value)}
                   required
+                  disabled={loadingCompanyCodes}
                 >
                   <SelectTrigger id="department">
-                    <SelectValue placeholder="Select department" />
+                    {loadingCompanyCodes ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </span>
+                    ) : (
+                      <SelectValue placeholder="Select department" />
+                    )}
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="IT">IT Department</SelectItem>
-                    <SelectItem value="HR">HR Department</SelectItem>
-                    <SelectItem value="FINANCE">Finance Department</SelectItem>
-                    <SelectItem value="OPERATIONS">Operations</SelectItem>
-                    <SelectItem value="SALES">Sales & Marketing</SelectItem>
-                    <SelectItem value="ADMIN">Administration</SelectItem>
+                    {companyCodes.length > 0 ? (
+                      companyCodes.map((cc: any) => (
+                        <SelectItem key={cc.id} value={cc.name}>
+                          {cc.code} - {cc.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="IT">IT Department</SelectItem>
+                        <SelectItem value="HR">HR Department</SelectItem>
+                        <SelectItem value="FINANCE">Finance Department</SelectItem>
+                        <SelectItem value="OPERATIONS">Operations</SelectItem>
+                        <SelectItem value="SALES">Sales & Marketing</SelectItem>
+                        <SelectItem value="ADMIN">Administration</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -254,14 +280,32 @@ export default function CreateBudgetPage() {
                 value={formData.approver}
                 onValueChange={(value) => handleChange('approver', value)}
                 required
+                disabled={loadingPurchasingGroups}
               >
                 <SelectTrigger id="approver">
-                  <SelectValue placeholder="Select approver" />
+                  {loadingPurchasingGroups ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading...
+                    </span>
+                  ) : (
+                    <SelectValue placeholder="Select approver" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cfo">CFO - Jane Smith</SelectItem>
-                  <SelectItem value="ceo">CEO - John Doe</SelectItem>
-                  <SelectItem value="dept-head">Department Head</SelectItem>
+                  {purchasingGroups.length > 0 ? (
+                    purchasingGroups.map((pg: any) => (
+                      <SelectItem key={pg.id} value={pg.id}>
+                        {pg.code} - {pg.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="finance-head">Finance Head</SelectItem>
+                      <SelectItem value="dept-head">Department Head</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
