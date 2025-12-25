@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store/store';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 import { cn } from '@/lib/utils';
 import { isBusinessUser, isApprover } from '@/utils/permissions';
 import { getBusinessNavigation, businessBottomNavigation, getRoleDisplayName, getRoleBadgeColor } from '@/config/business-navigation';
@@ -31,6 +32,7 @@ export default function BusinessLayout({
   const [isHydrated, setIsHydrated] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useSelector((state: RootState) => state.auth.user);
   const [logout] = useLogoutMutation();
@@ -92,9 +94,12 @@ export default function BusinessLayout({
   const handleLogout = async () => {
     try {
       await logout().unwrap();
-      router.push('/business/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout API failed:', error);
+    } finally {
+      // Always clear local state and redirect, even if API fails
+      dispatch(logoutAction());
+      router.push('/business/login');
     }
   };
 
