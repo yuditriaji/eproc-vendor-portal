@@ -114,7 +114,7 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
               <Badge variant={status.variant}>{status.label}</Badge>
             </div>
             <p className="text-muted-foreground mt-1">
-              Bid ID: {bid.id.slice(0, 12).toUpperCase()}
+              Bid ID: {bid.id?.slice(0, 12).toUpperCase() || 'N/A'}
             </p>
           </div>
         </div>
@@ -294,7 +294,11 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
             <CardTitle>Technical Proposal</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground whitespace-pre-wrap">{bid.technicalProposal}</p>
+            <p className="text-muted-foreground whitespace-pre-wrap">
+              {typeof bid.technicalProposal === 'string'
+                ? bid.technicalProposal
+                : (bid.technicalProposal as any)?.description || JSON.stringify(bid.technicalProposal)}
+            </p>
           </CardContent>
         </Card>
       )}
