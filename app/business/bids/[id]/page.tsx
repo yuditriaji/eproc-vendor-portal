@@ -127,9 +127,9 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
             <CardTitle className="text-sm font-medium">Tender</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-semibold">{bid.tenderTitle || 'N/A'}</p>
+            <p className="font-semibold">{(bid as any).tender?.title || bid.tenderTitle || 'N/A'}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {bid.tenderNumber || `#${bid.tenderId.slice(0, 8)}`}
+              {(bid as any).tender?.tenderNumber || bid.tenderNumber || `#${bid.tenderId?.slice(0, 8) || 'N/A'}`}
             </p>
           </CardContent>
         </Card>
@@ -139,9 +139,9 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
             <CardTitle className="text-sm font-medium">Vendor</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-semibold">{bid.vendorName || 'N/A'}</p>
+            <p className="font-semibold">{(bid as any).vendor?.name || bid.vendorName || 'N/A'}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              ID: {bid.vendorId.slice(0, 8)}
+              ID: {bid.vendorId?.slice(0, 8) || 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -152,7 +152,15 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(bid.amount || bid.bidAmount || 0, bid.currency)}
+              {(() => {
+                const amount = bid.bidAmount || (bid as any).amount;
+                const parsed = amount
+                  ? (typeof amount === 'object' ? Number(amount) : parseFloat(String(amount)))
+                  : 0;
+                return parsed && !isNaN(parsed)
+                  ? formatCurrency(parsed, bid.currency || 'USD')
+                  : 'N/A';
+              })()}
             </p>
           </CardContent>
         </Card>
