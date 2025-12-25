@@ -79,8 +79,8 @@ export default function BidsPage() {
     evaluated: bids.filter(b => b.status === 'EVALUATED').length,
     accepted: bids.filter(b => b.status === 'ACCEPTED').length,
     rejected: bids.filter(b => b.status === 'REJECTED').length,
-    avgScore: bids.filter(b => b.score).reduce((sum, b) => sum + (b.score || 0), 0) / 
-              (bids.filter(b => b.score).length || 1),
+    avgScore: bids.filter(b => b.score).reduce((sum, b) => sum + (b.score || 0), 0) /
+      (bids.filter(b => b.score).length || 1),
   };
 
   return (
@@ -261,10 +261,10 @@ export default function BidsPage() {
                     const StatusIcon = status.icon;
                     const needsReview = bid.status === 'SUBMITTED' || bid.status === 'UNDER_REVIEW';
                     const isWinner = bid.status === 'ACCEPTED';
-                    
+
                     return (
-                      <TableRow 
-                        key={bid.id} 
+                      <TableRow
+                        key={bid.id}
                         className={isWinner ? 'bg-green-50 dark:bg-green-950/10' : ''}
                       >
                         <TableCell className="font-medium font-mono">
@@ -272,14 +272,14 @@ export default function BidsPage() {
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div className="truncate font-medium">
-                            {bid.tenderTitle || bid.tenderId}
+                            {(bid as any).tender?.title || bid.tenderTitle || bid.tenderId}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {bid.tenderNumber || `#${bid.tenderId.slice(0, 8)}`}
+                            {(bid as any).tender?.tenderNumber || bid.tenderNumber || `#${bid.tenderId?.slice(0, 8) || 'N/A'}`}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{bid.vendorName || 'N/A'}</div>
+                          <div className="font-medium">{(bid as any).vendor?.name || bid.vendorName || 'N/A'}</div>
                           {bid.vendorId && (
                             <div className="text-xs text-muted-foreground">
                               ID: {bid.vendorId.slice(0, 8)}
@@ -287,7 +287,15 @@ export default function BidsPage() {
                           )}
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(bid.amount || bid.bidAmount || 0, bid.currency)}
+                          {(() => {
+                            const amount = bid.bidAmount || (bid as any).amount;
+                            const parsed = amount
+                              ? (typeof amount === 'object' ? Number(amount) : parseFloat(String(amount)))
+                              : 0;
+                            return parsed && !isNaN(parsed)
+                              ? formatCurrency(parsed, bid.currency || 'USD')
+                              : 'N/A';
+                          })()}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">{bid.submittedAt ? formatDate(bid.submittedAt) : 'N/A'}</span>
