@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-// import { useCreateBudgetMutation } from '@/store/api/businessApi'; // TODO: Implement budget API
+import { useCreateBudgetMutation } from '@/store/api/financeApi';
 import { canManageBudget } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,8 +25,7 @@ import { toast } from 'sonner';
 export default function CreateBudgetPage() {
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
-  // const [createBudget, { isLoading }] = useCreateBudgetMutation(); // TODO: Implement budget API
-  const [isLoading, setIsLoading] = useState(false);
+  const [createBudget, { isLoading }] = useCreateBudgetMutation();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -58,23 +57,24 @@ export default function CreateBudgetPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     try {
-      // TODO: Replace with actual API call when budget API is implemented
-      console.log('Creating budget:', {
-        ...formData,
-        fiscalYear: parseInt(formData.fiscalYear),
-        totalAmount: parseFloat(formData.totalAmount),
-      });
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createBudget({
+        name: formData.name,
+        fiscalYear: formData.fiscalYear,
+        departmentName: formData.department,
+        allocatedAmount: parseFloat(formData.totalAmount),
+        currency: formData.currency,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        description: formData.category ? `[${formData.category}] ${formData.description}` : formData.description,
+        period: 'ANNUALLY',
+        status: 'ACTIVE',
+      } as any).unwrap();
       toast.success('Budget created successfully');
       router.push('/business/budgets');
-    } catch (error) {
-      toast.error('Failed to create budget');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create budget');
       console.error('Error creating budget:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

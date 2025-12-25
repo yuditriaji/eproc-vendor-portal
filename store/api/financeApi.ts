@@ -249,10 +249,10 @@ export const financeApi = baseApi.injectEndpoints({
 
     transferBudget: builder.mutation<
       ApiResponse<BudgetTransfer>,
-      Partial<BudgetTransfer>
+      { fromBudgetId: string; toBudgetId: string; amount: number; reason?: string }
     >({
       query: (data) => ({
-        url: `budgets/${data.fromBudgetId}/transfer`,
+        url: `budgets/transfer`,
         method: 'POST',
         body: data,
       }),
