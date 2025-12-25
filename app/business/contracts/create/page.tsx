@@ -91,14 +91,24 @@ export default function CreateContractPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createContract({
-        ...formData,
-        amount: parseFloat(formData.amount),
-      }).unwrap();
+      // Transform data to match backend DTO
+      const contractData = {
+        contractNumber: formData.contractNumber,
+        title: formData.title,
+        description: formData.description,
+        totalAmount: parseFloat(formData.amount) || 0,
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+        terms: formData.terms ? { text: formData.terms } : undefined,
+        deliverables: formData.deliveryTerms ? { text: formData.deliveryTerms } : undefined,
+        vendorIds: formData.vendorId ? [formData.vendorId] : [],
+      };
+
+      await createContract(contractData as any).unwrap();
       toast.success('Contract created successfully');
       router.push('/business/contracts');
-    } catch (error) {
-      toast.error('Failed to create contract');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create contract');
       console.error('Error creating contract:', error);
     }
   };
