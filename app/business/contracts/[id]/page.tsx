@@ -157,9 +157,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             await initiateProcurement({ contractId: id }).unwrap();
             toast({
                 title: 'Success',
-                description: 'Procurement workflow initiated successfully',
+                description: 'Procurement workflow initiated. Redirecting to create Purchase Requisition...',
             });
             setIsInitiateProcurementOpen(false);
+            // Navigate to PR creation page
+            window.location.href = `/business/requisitions/create?contractId=${id}`;
         } catch (error: any) {
             toast({
                 title: 'Error',
