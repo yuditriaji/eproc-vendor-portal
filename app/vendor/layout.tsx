@@ -16,33 +16,51 @@ export default function VendorLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useSelector((state: RootState) => state.auth.user);
 
+  // Wait for client-side hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   // Don't apply layout to auth pages
-  const isAuthPage = pathname?.startsWith('/vendor/login') || 
-                     pathname?.startsWith('/vendor/register') ||
-                     pathname?.startsWith('/vendor/forgot-password');
+  const isAuthPage = pathname?.startsWith('/vendor/login') ||
+    pathname?.startsWith('/vendor/register') ||
+    pathname?.startsWith('/vendor/forgot-password');
 
   // Redirect to login if not authenticated and not on auth page
   // Also check if user has vendor role
+  // Wait for hydration to prevent redirect on page refresh
   useEffect(() => {
+    if (!isHydrated) return;
+
     if (!isAuthenticated && !isAuthPage) {
       router.push('/vendor/login');
       return;
     }
-    
+
     // Check if authenticated user is actually a vendor
     if (isAuthenticated && !isAuthPage && !isVendor(user)) {
       router.push('/unauthorized');
     }
-  }, [isAuthenticated, isAuthPage, user, router]);
+  }, [isHydrated, isAuthenticated, isAuthPage, user, router]);
 
   // If auth page, render children without layout
   if (isAuthPage) {
     return <>{children}</>;
+  }
+
+  // Wait for hydration before checking auth
+  if (!isHydrated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   // If not authenticated, don't render protected content

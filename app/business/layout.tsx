@@ -28,11 +28,17 @@ export default function BusinessLayout({
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useSelector((state: RootState) => state.auth.user);
   const [logout] = useLogoutMutation();
+
+  // Wait for client-side hydration before checking auth
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Don't apply layout to auth pages
   const isAuthPage = pathname?.startsWith('/business/login') ||
@@ -62,7 +68,10 @@ export default function BusinessLayout({
   }, [baseNavigation, pendingCount]);
 
   // RBAC: Check if user is a business user (not VENDOR, not ADMIN)
+  // Wait for hydration to prevent redirect on page refresh
   useEffect(() => {
+    if (!isHydrated) return; // Wait for client-side hydration
+
     if (!isAuthenticated && !isAuthPage) {
       router.push('/business/login'); // Redirect to business login
       return;
@@ -78,7 +87,7 @@ export default function BusinessLayout({
       // Otherwise unauthorized
       router.push('/unauthorized');
     }
-  }, [isAuthenticated, isAuthPage, user, router]);
+  }, [isHydrated, isAuthenticated, isAuthPage, user, router]);
 
   const handleLogout = async () => {
     try {
@@ -92,6 +101,15 @@ export default function BusinessLayout({
   // If auth page, render children without layout
   if (isAuthPage) {
     return <>{children}</>;
+  }
+
+  // Wait for hydration before checking auth (prevents flash on page refresh)
+  if (!isHydrated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   // If not authenticated, don't render protected content
