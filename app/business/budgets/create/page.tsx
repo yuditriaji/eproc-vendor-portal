@@ -38,8 +38,8 @@ export default function CreateBudgetPage() {
   const [formData, setFormData] = useState({
     name: '',
     fiscalYear: new Date().getFullYear().toString(),
-    department: '',
-    category: '',
+    orgUnitId: '', // Required: company code ID
+    type: 'DEPARTMENT', // Required: DIVISION | DEPARTMENT | STAFF | PROJECT
     totalAmount: '',
     currency: 'USD',
     startDate: '',
@@ -65,18 +65,23 @@ export default function CreateBudgetPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.totalAmount || parseFloat(formData.totalAmount) <= 0) {
+      toast.error('Please enter a valid total amount');
+      return;
+    }
+
+    if (!formData.orgUnitId) {
+      toast.error('Please select an organization unit');
+      return;
+    }
+
     try {
       await createBudget({
-        name: formData.name,
         fiscalYear: formData.fiscalYear,
-        departmentName: formData.department,
-        allocatedAmount: parseFloat(formData.totalAmount),
-        currency: formData.currency,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        description: formData.category ? `[${formData.category}] ${formData.description}` : formData.description,
-        period: 'ANNUALLY',
-        status: 'ACTIVE',
+        totalAmount: parseFloat(formData.totalAmount),
+        orgUnitId: formData.orgUnitId,
+        type: formData.type,
       } as any).unwrap();
       toast.success('Budget created successfully');
       router.push('/business/budgets');
@@ -152,64 +157,54 @@ export default function CreateBudgetPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">Department / Company Code *</Label>
+                <Label htmlFor="orgUnitId">Organization Unit *</Label>
                 <Select
-                  value={formData.department}
-                  onValueChange={(value) => handleChange('department', value)}
+                  value={formData.orgUnitId}
+                  onValueChange={(value) => handleChange('orgUnitId', value)}
                   required
                   disabled={loadingCompanyCodes}
                 >
-                  <SelectTrigger id="department">
+                  <SelectTrigger id="orgUnitId">
                     {loadingCompanyCodes ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading...
                       </span>
                     ) : (
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue placeholder="Select organization unit" />
                     )}
                   </SelectTrigger>
                   <SelectContent>
                     {companyCodes.length > 0 ? (
                       companyCodes.map((cc: any) => (
-                        <SelectItem key={cc.id} value={cc.name}>
+                        <SelectItem key={cc.id} value={cc.id}>
                           {cc.code} - {cc.name}
                         </SelectItem>
                       ))
                     ) : (
-                      <>
-                        <SelectItem value="IT">IT Department</SelectItem>
-                        <SelectItem value="HR">HR Department</SelectItem>
-                        <SelectItem value="FINANCE">Finance Department</SelectItem>
-                        <SelectItem value="OPERATIONS">Operations</SelectItem>
-                        <SelectItem value="SALES">Sales & Marketing</SelectItem>
-                        <SelectItem value="ADMIN">Administration</SelectItem>
-                      </>
+                      <SelectItem value="default-org">Default Organization</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Budget Category */}
+            {/* Budget Type */}
             <div className="space-y-2">
-              <Label htmlFor="category">Budget Category *</Label>
+              <Label htmlFor="type">Budget Type *</Label>
               <Select
-                value={formData.category}
-                onValueChange={(value) => handleChange('category', value)}
+                value={formData.type}
+                onValueChange={(value) => handleChange('type', value)}
                 required
               >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CAPEX">Capital Expenditure (CAPEX)</SelectItem>
-                  <SelectItem value="OPEX">Operational Expenditure (OPEX)</SelectItem>
-                  <SelectItem value="PERSONNEL">Personnel Costs</SelectItem>
-                  <SelectItem value="TRAVEL">Travel & Entertainment</SelectItem>
-                  <SelectItem value="SUPPLIES">Supplies & Materials</SelectItem>
-                  <SelectItem value="SERVICES">Services & Contractors</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
+                  <SelectItem value="DIVISION">Division</SelectItem>
+                  <SelectItem value="DEPARTMENT">Department</SelectItem>
+                  <SelectItem value="STAFF">Staff</SelectItem>
+                  <SelectItem value="PROJECT">Project</SelectItem>
                 </SelectContent>
               </Select>
             </div>
