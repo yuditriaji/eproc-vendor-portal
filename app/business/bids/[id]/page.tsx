@@ -231,7 +231,7 @@ export default function BidDetailPage({ params }: { params: Promise<{ id: string
             </p>
             <div className="flex justify-center mt-4">
               <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href={`/business/contracts/new?bidId=${bid.id}&vendorId=${bid.vendorId}`}>
+                <Link href={`/business/contracts/create?bidId=${bid.id}&vendorId=${bid.vendorId}`}>
                   Create Contract
                 </Link>
               </Button>

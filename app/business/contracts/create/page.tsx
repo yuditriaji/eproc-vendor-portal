@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { useCreateContractMutation } from '@/store/api/businessApi';
+import { useCreateContractMutation, useGetBidByIdQuery, useGetVendorsQuery } from '@/store/api/businessApi';
 import { canCreateContract } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,27 @@ import { toast } from 'sonner';
 
 export default function CreateContractPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const user = useSelector((state: RootState) => state.auth.user);
   const [createContract, { isLoading }] = useCreateContractMutation();
+
+  // Get bid and vendor from URL params
+  const bidId = searchParams.get('bidId');
+  const preselectedVendorId = searchParams.get('vendorId');
+
+  // Fetch bid data if bidId is provided
+  const { data: bidResponse } = useGetBidByIdQuery(bidId || '', { skip: !bidId });
+  const bid = bidResponse?.data;
+
+  // Fetch vendors for dropdown
+  const { data: vendorsResponse } = useGetVendorsQuery({ page: 1, pageSize: 100 });
+  const vendors = vendorsResponse?.data || [];
 
   const [formData, setFormData] = useState({
     title: '',
     contractNumber: '',
-    vendorId: '',
+    vendorId: preselectedVendorId || '',
+    bidId: bidId || '',
     amount: '',
     currency: 'USD',
     startDate: '',
@@ -40,6 +54,24 @@ export default function CreateContractPage() {
     paymentTerms: '',
     deliveryTerms: '',
   });
+
+  // Pre-fill form when bid data is loaded
+  useEffect(() => {
+    if (bid) {
+      const bidAmount = bid.bidAmount
+        ? (typeof bid.bidAmount === 'object' ? Number(bid.bidAmount) : parseFloat(String(bid.bidAmount)))
+        : 0;
+
+      setFormData(prev => ({
+        ...prev,
+        title: (bid as any).tender?.title ? `Contract for ${(bid as any).tender.title}` : prev.title,
+        vendorId: bid.vendorId || prev.vendorId,
+        bidId: bid.id || prev.bidId,
+        amount: bidAmount ? bidAmount.toString() : prev.amount,
+        description: `Contract created from Bid ${bid.id?.slice(0, 8).toUpperCase()}`,
+      }));
+    }
+  }, [bid]);
 
   // Check permission
   if (!canCreateContract(user)) {
@@ -138,9 +170,11 @@ export default function CreateContractPage() {
                   <SelectValue placeholder="Select vendor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="vendor1">Vendor 1</SelectItem>
-                  <SelectItem value="vendor2">Vendor 2</SelectItem>
-                  <SelectItem value="vendor3">Vendor 3</SelectItem>
+                  {vendors.map((vendor: any) => (
+                    <SelectItem key={vendor.id} value={vendor.id}>
+                      {vendor.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
