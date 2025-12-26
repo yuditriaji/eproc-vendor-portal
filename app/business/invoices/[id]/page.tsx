@@ -1,13 +1,18 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { useGetInvoiceByIdQuery, useApproveInvoiceMutation } from '@/store/api/financeApi';
+import { useProcessPaymentFromInvoiceMutation } from '@/store/api/workflowApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, CheckCircle, XCircle, Calendar, DollarSign } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, CheckCircle, XCircle, Calendar, DollarSign, CreditCard } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -25,11 +30,18 @@ const statusConfig = {
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { toast } = useToast();
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    method: 'BANK_TRANSFER',
+    reference: '',
+    notes: '',
+  });
 
   const { data: invoiceResponse, isLoading } = useGetInvoiceByIdQuery(id);
   const [approveInvoice, { isLoading: isApproving }] = useApproveInvoiceMutation();
+  const [processPayment, { isLoading: isProcessingPayment }] = useProcessPaymentFromInvoiceMutation();
 
-  const invoice = invoiceResponse?.data;
+  const invoice: any = invoiceResponse?.data ?? invoiceResponse;
 
   const handleApprove = async (approved: boolean) => {
     try {
@@ -42,6 +54,31 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       toast({
         title: 'Error',
         description: error?.data?.message || 'Failed to process approval',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleProcessPayment = async () => {
+    try {
+      await processPayment({
+        invoiceId: id,
+        data: {
+          paymentMethod: paymentData.method,
+          reference: paymentData.reference,
+          notes: paymentData.notes,
+          paidAt: new Date().toISOString(),
+        },
+      }).unwrap();
+      toast({
+        title: 'Success',
+        description: 'Payment processed successfully',
+      });
+      setIsPaymentDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to process payment',
         variant: 'destructive',
       });
     }
@@ -69,13 +106,14 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const status = statusConfig[invoice.status] || statusConfig.DRAFT;
+  const status = statusConfig[invoice.status as keyof typeof statusConfig] || statusConfig.DRAFT;
   const canApprove = invoice.status === 'PENDING_APPROVAL';
+  const canProcessPayment = invoice.status === 'APPROVED';
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <div className="flex items-start gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/business/invoices">
@@ -93,22 +131,30 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {canApprove && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              onClick={() => handleApprove(false)}
-              disabled={isApproving}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Reject
+        <div className="flex items-center gap-2">
+          {canApprove && (
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => handleApprove(false)}
+                disabled={isApproving}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Reject
+              </Button>
+              <Button onClick={() => handleApprove(true)} disabled={isApproving}>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve
+              </Button>
+            </>
+          )}
+          {canProcessPayment && (
+            <Button onClick={() => setIsPaymentDialogOpen(true)}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Process Payment
             </Button>
-            <Button onClick={() => handleApprove(true)} disabled={isApproving}>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approve
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Key Information */}
@@ -210,7 +256,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoice.items.map((item, index) => (
+              {(invoice.items || []).map((item: any, index: number) => (
                 <TableRow key={item.id || index}>
                   <TableCell>{item.description}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
@@ -303,6 +349,60 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
       )}
+
+      {/* Payment Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Process Payment</DialogTitle>
+            <DialogDescription>
+              Record payment for invoice {invoice.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Amount</Label>
+              <Input value={formatCurrency(invoice.totalAmount, invoice.currency)} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Method</Label>
+              <Select value={paymentData.method} onValueChange={(v) => setPaymentData(prev => ({ ...prev, method: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                  <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                  <SelectItem value="CASH">Cash</SelectItem>
+                  <SelectItem value="CHECK">Check</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Reference</Label>
+              <Input
+                placeholder="e.g., Transaction ID or Check Number"
+                value={paymentData.reference}
+                onChange={(e) => setPaymentData(prev => ({ ...prev, reference: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Input
+                placeholder="Optional notes"
+                value={paymentData.notes}
+                onChange={(e) => setPaymentData(prev => ({ ...prev, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleProcessPayment} disabled={isProcessingPayment}>
+              {isProcessingPayment ? 'Processing...' : 'Confirm Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

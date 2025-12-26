@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useCreateInvoiceMutation } from '@/store/api/financeApi';
+import { useGetGoodsReceiptByIdQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,24 +22,51 @@ interface InvoiceItem {
 
 export default function CreateInvoicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const grIdFromUrl = searchParams.get('grId');
   const { toast } = useToast();
   const [createInvoice, { isLoading }] = useCreateInvoiceMutation();
 
+  // Fetch GR details if grId is provided
+  const { data: grResponse } = useGetGoodsReceiptByIdQuery(grIdFromUrl || '', { skip: !grIdFromUrl });
+  const gr: any = grResponse?.data ?? grResponse;
+
   const [formData, setFormData] = useState({
     purchaseOrderId: '',
-    goodsReceiptId: '',
+    goodsReceiptId: grIdFromUrl || '',
     contractId: '',
     invoiceDate: new Date().toISOString().split('T')[0],
     dueDate: '',
-    currency: 'USD',
-    taxRate: '10',
-    paymentTerms: '',
+    currency: 'IDR',
+    taxRate: '11',
+    paymentTerms: 'Net 30',
     notes: '',
   });
 
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: '1', description: '', quantity: '1', unitPrice: '0' },
   ]);
+
+  // Pre-fill from GR data when loaded
+  useEffect(() => {
+    if (gr && grIdFromUrl) {
+      setFormData(prev => ({
+        ...prev,
+        goodsReceiptId: grIdFromUrl,
+        purchaseOrderId: gr.purchaseOrderId || gr.purchaseOrder?.id || '',
+      }));
+      // Pre-fill items from GR
+      if (gr.receivedItems || gr.items) {
+        const grItems = (gr.receivedItems || gr.items).map((item: any, idx: number) => ({
+          id: item.id || String(idx + 1),
+          description: item.description || item.name || '',
+          quantity: String(item.receivedQuantity || item.quantity || 1),
+          unitPrice: String(item.unitPrice || 0),
+        }));
+        if (grItems.length > 0) setItems(grItems);
+      }
+    }
+  }, [gr, grIdFromUrl]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
