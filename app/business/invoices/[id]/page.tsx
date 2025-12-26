@@ -194,7 +194,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(invoice.totalAmount, invoice.currency)}
+              {formatCurrency(invoice.totalAmount, invoice.currency || 'IDR')}
             </p>
           </CardContent>
         </Card>
@@ -263,10 +263,10 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   <TableCell>{item.description}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(item.unitPrice, invoice.currency)}
+                    {formatCurrency(item.unitPrice, invoice.currency || 'IDR')}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
-                    {formatCurrency(item.totalPrice, invoice.currency)}
+                    {formatCurrency(item.totalPrice, invoice.currency || 'IDR')}
                   </TableCell>
                 </TableRow>
               ))}
@@ -277,18 +277,18 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             <div className="flex items-center justify-between">
               <span>Subtotal:</span>
               <span className="font-semibold">
-                {formatCurrency(invoice.subtotal, invoice.currency)}
+                {formatCurrency(invoice.subtotal || invoice.amount, invoice.currency || 'IDR')}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Tax:</span>
               <span className="font-semibold">
-                {formatCurrency(invoice.taxAmount, invoice.currency)}
+                {formatCurrency(invoice.taxAmount || 0, invoice.currency || 'IDR')}
               </span>
             </div>
             <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
               <span>Total:</span>
-              <span>{formatCurrency(invoice.totalAmount, invoice.currency)}</span>
+              <span>{formatCurrency(invoice.totalAmount, invoice.currency || 'IDR')}</span>
             </div>
           </div>
         </CardContent>
@@ -364,7 +364,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Amount</Label>
-              <Input value={formatCurrency(invoice.totalAmount, invoice.currency)} disabled />
+              <Input value={formatCurrency(invoice.totalAmount, invoice.currency || 'IDR')} disabled />
             </div>
             <div className="space-y-2">
               <Label>Payment Method</Label>
