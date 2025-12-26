@@ -259,6 +259,22 @@ export const financeApi = baseApi.injectEndpoints({
       invalidatesTags: ['Budgets', 'Transactions', 'BusinessDashboard'],
     }),
 
+    allocateBudget: builder.mutation<
+      ApiResponse<any>,
+      {
+        fromBudgetId: string;
+        toOrgUnits: Array<{ orgUnitId: string; amount: number; percent?: number }>;
+        reason?: string;
+      }
+    >({
+      query: ({ fromBudgetId, ...data }) => ({
+        url: `budgets/${fromBudgetId}/allocate`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Budgets', 'Transactions', 'BusinessDashboard'],
+    }),
+
     // ===== TRANSACTIONS =====
     getTransactions: builder.query<
       PaginatedResponse<Transaction>,
@@ -332,6 +348,7 @@ export const {
   useUpdateBudgetMutation,
   useDeleteBudgetMutation,
   useTransferBudgetMutation,
+  useAllocateBudgetMutation,
 
   // Transactions
   useGetTransactionsQuery,
