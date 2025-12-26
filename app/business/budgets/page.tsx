@@ -303,7 +303,7 @@ export default function BudgetsPage() {
                           <span className="text-sm">{budget.fiscalYear}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm capitalize">{budget.period.toLowerCase()}</span>
+                          <span className="text-sm capitalize">{budget.period?.toLowerCase() || 'Annual'}</span>
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(budget.allocatedAmount, budget.currency)}
