@@ -55,10 +55,13 @@ export default function OrgUnitsPage() {
 
     // When company code is selected, auto-fill the SAP code
     const handleCompanyCodeSelect = (companyCodeId: string) => {
-        setValue('companyCodeId', companyCodeId);
-        const cc = companyCodes.find((c: any) => c.id === companyCodeId);
-        if (cc) {
-            setValue('companyCode', cc.code);
+        const actualValue = companyCodeId === 'none' ? undefined : companyCodeId;
+        setValue('companyCodeId', actualValue);
+        if (actualValue) {
+            const cc = companyCodes.find((c: any) => c.id === actualValue);
+            if (cc) {
+                setValue('companyCode', cc.code);
+            }
         }
     };
 
@@ -164,7 +167,7 @@ export default function OrgUnitsPage() {
                                 <div className="space-y-2">
                                     <Label>Linked Company Code (SAP)</Label>
                                     <Select
-                                        value={selectedCompanyCodeId || ''}
+                                        value={selectedCompanyCodeId || 'none'}
                                         onValueChange={handleCompanyCodeSelect}
                                         disabled={loadingCompanyCodes}
                                     >
@@ -179,7 +182,7 @@ export default function OrgUnitsPage() {
                                             )}
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">None</SelectItem>
+                                            <SelectItem value="none">None</SelectItem>
                                             {companyCodes.map((cc: any) => (
                                                 <SelectItem key={cc.id} value={cc.id}>
                                                     {cc.code} - {cc.name}
@@ -192,14 +195,14 @@ export default function OrgUnitsPage() {
                                 <div className="space-y-2">
                                     <Label>Parent Org Unit (Hierarchy)</Label>
                                     <Select
-                                        value={watch('parentId') || ''}
-                                        onValueChange={(value) => setValue('parentId', value || undefined)}
+                                        value={watch('parentId') || 'none'}
+                                        onValueChange={(value) => setValue('parentId', value === 'none' ? undefined : value)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select parent (or leave empty for root)" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">None (Root Level)</SelectItem>
+                                            <SelectItem value="none">None (Root Level)</SelectItem>
                                             {orgUnits.map((ou: any) => (
                                                 <SelectItem key={ou.id} value={ou.id}>
                                                     {'─'.repeat(ou.level - 1)} {ou.name}
