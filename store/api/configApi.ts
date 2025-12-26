@@ -351,6 +351,7 @@ export const configApi = baseApi.injectEndpoints({
       type: 'COMPANY_CODE' | 'PURCHASING_GROUP';
       level: number;
       parentId?: string;
+      companyCodeId?: string;
       companyCode?: string;
       pgCode?: string;
     }>({
