@@ -142,7 +142,7 @@ export default function CreateInvoicePage() {
         const selectedPO = purchaseOrders.find((po: any) => po.id === formData.purchaseOrderId);
         const vendorId = selectedPO?.vendors?.[0]?.vendorId || selectedPO?.vendorId;
 
-        if (!vendorId && !formData.purchaseOrderId) {
+        if (!formData.purchaseOrderId) {
           toast({
             title: 'Missing Information',
             description: 'Please select a Purchase Order or Goods Receipt to create an invoice',
@@ -151,15 +151,24 @@ export default function CreateInvoicePage() {
           return;
         }
 
+        if (!vendorId) {
+          toast({
+            title: 'Missing Vendor',
+            description: 'Could not find vendor information from the selected PO. Please select a Goods Receipt instead.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
         const invoiceData = {
-          poId: formData.purchaseOrderId || undefined,
+          poId: formData.purchaseOrderId,
           vendorId: vendorId,
           items: invoiceItems,
           amount: subtotal,
           taxAmount,
           totalAmount: total,
           invoiceDate: formData.invoiceDate,
-          dueDate: formData.dueDate,
+          dueDate: formData.dueDate || undefined,
           notes: formData.notes || undefined,
         };
 
@@ -173,6 +182,7 @@ export default function CreateInvoicePage() {
 
       router.push('/business/invoices');
     } catch (error: any) {
+      console.error('Invoice creation error:', error);
       toast({
         title: 'Error',
         description: error?.data?.message || error?.message || 'Failed to create invoice',
