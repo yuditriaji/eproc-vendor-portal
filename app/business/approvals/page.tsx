@@ -9,6 +9,7 @@ import {
   useApproveRequestMutation,
 } from '@/store/api/workflowApi';
 import { useGetPendingPOApprovalsQuery, useGetContractsQuery } from '@/store/api/businessApi';
+import { useGetInvoicesQuery, useApproveInvoiceMutation } from '@/store/api/financeApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -106,7 +107,16 @@ export default function ApprovalsPage() {
     status: 'PENDING_APPROVAL',
   }, { skip: !shouldFetchContracts });
 
+  // Fetch Invoice pending approvals (when all or INVOICE selected)
+  const shouldFetchInvoices = typeFilter === 'all' || typeFilter === 'INVOICE';
+  const { data: invoicesResponse, isLoading: invoicesLoading } = useGetInvoicesQuery({
+    page,
+    pageSize,
+    status: 'PENDING',
+  }, { skip: !shouldFetchInvoices });
+
   const [approveRequest, { isLoading: isProcessing }] = useApproveRequestMutation();
+  const [approveInvoice] = useApproveInvoiceMutation();
 
   // Merge results based on filter
   const prApprovals = (shouldFetchPRs && prApprovalsResponse?.data) || [];
@@ -122,7 +132,7 @@ export default function ApprovalsPage() {
       title: contract.title,
       description: contract.description,
       amount: contract.totalAmount,
-      currency: contract.currency?.code || 'USD',
+      currency: contract.currency?.code || 'IDR',
       priority: 'MEDIUM',
       requestedBy: contract.owner?.firstName ? `${contract.owner.firstName} ${contract.owner.lastName}` : contract.owner?.username,
       requestedAt: contract.createdAt,
@@ -130,19 +140,41 @@ export default function ApprovalsPage() {
     }))
     : [];
 
+  // Transform invoices to approval format
+  const invoiceApprovals = (shouldFetchInvoices && invoicesResponse?.data)
+    ? invoicesResponse.data.map((invoice: any) => ({
+      id: invoice.id,
+      entityId: invoice.id,
+      entityType: 'INVOICE',
+      entityNumber: invoice.invoiceNumber,
+      title: `Invoice ${invoice.invoiceNumber}`,
+      description: invoice.notes || `Invoice from ${invoice.vendor?.name || 'Unknown Vendor'}`,
+      amount: invoice.totalAmount,
+      currency: invoice.currency?.code || 'IDR',
+      priority: invoice.dueDate && new Date(invoice.dueDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? 'HIGH' : 'MEDIUM',
+      requestedBy: invoice.vendor?.name || 'Vendor',
+      requestedAt: invoice.createdAt,
+      status: 'PENDING',
+      dueDate: invoice.dueDate,
+      viewUrl: `/business/invoices/${invoice.id}`,
+    }))
+    : [];
+
   // Combine and possibly filter
   let approvals: any[] = [];
   if (typeFilter === 'all') {
-    approvals = [...prApprovals, ...poApprovals, ...contractApprovals];
+    approvals = [...prApprovals, ...poApprovals, ...contractApprovals, ...invoiceApprovals];
   } else if (typeFilter === 'PURCHASE_REQUISITION') {
     approvals = prApprovals;
   } else if (typeFilter === 'PURCHASE_ORDER') {
     approvals = poApprovals;
   } else if (typeFilter === 'CONTRACT') {
     approvals = contractApprovals;
+  } else if (typeFilter === 'INVOICE') {
+    approvals = invoiceApprovals;
   }
 
-  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading) || (shouldFetchContracts && contractsLoading);
+  const isLoading = (shouldFetchPRs && prLoading) || (shouldFetchPOs && poLoading) || (shouldFetchContracts && contractsLoading) || (shouldFetchInvoices && invoicesLoading);
   const total = approvals.length;
   const totalPages = Math.ceil(total / pageSize) || 1;
 
@@ -183,16 +215,25 @@ export default function ApprovalsPage() {
         return;
       }
 
-      await approveRequest({
-        id: selectedApproval.id,
-        approved: isApproving,
-        comments: comments || undefined,
-        type: selectedApproval.type, // Pass type so it knows which endpoint to call
-      }).unwrap();
+      // Handle invoice approvals differently
+      if (selectedApproval.entityType === 'INVOICE') {
+        await approveInvoice({
+          id: selectedApproval.id,
+          approved: isApproving,
+          reason: comments || undefined,
+        }).unwrap();
+      } else {
+        await approveRequest({
+          id: selectedApproval.id,
+          approved: isApproving,
+          comments: comments || undefined,
+          type: selectedApproval.entityType || selectedApproval.type,
+        }).unwrap();
+      }
 
       toast({
         title: isApproving ? 'Approved' : 'Rejected',
-        description: `${selectedApproval.title} has been ${isApproving ? 'approved successfully' : 'rejected'}.`,
+        description: `${selectedApproval.title || selectedApproval.entityNumber} has been ${isApproving ? 'approved successfully' : 'rejected'}.`,
         variant: isApproving ? 'default' : 'destructive',
       });
 
