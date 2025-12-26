@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAppSelector } from '@/store/hooks';
 import { isAdmin } from '@/utils/permissions';
-import { 
+import {
   LayoutDashboard,
   Building2,
   Settings,
@@ -77,6 +77,11 @@ const navigation: NavItem[] = [
             title: 'Purchasing Groups',
             href: '/admin/configuration/organization/purchasing-groups',
             icon: Users,
+          },
+          {
+            title: 'Org Units (Budget)',
+            href: '/admin/configuration/organization/org-units',
+            icon: Network,
           },
         ],
       },
@@ -170,7 +175,7 @@ export default function AdminLayoutContent({ children }: { children: React.React
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  
+
   useEffect(() => {
     // Check if user is authenticated and has ADMIN role (enum or RBAC)
     if (!isAuthenticated) {
@@ -178,16 +183,16 @@ export default function AdminLayoutContent({ children }: { children: React.React
       router.replace(`/admin/login?tenant=${tenant}`);
       return;
     }
-    
+
     // Check both enum and RBAC roles
     if (!isAdmin(user)) {
       router.replace('/unauthorized');
       return;
     }
-    
+
     setIsLoading(false);
   }, [isAuthenticated, user, router, searchParams]);
-  
+
   if (isLoading || !isAuthenticated || !isAdmin(user)) {
     return (
       <div className="flex items-center justify-center h-screen">
