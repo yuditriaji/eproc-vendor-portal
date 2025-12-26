@@ -283,7 +283,7 @@ export interface Quotation {
 }
 
 // Payment types
-export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type PaymentStatus = 'REQUESTED' | 'APPROVED' | 'PROCESSED' | 'FAILED' | 'CANCELLED';
 
 export interface Payment {
   id: string;

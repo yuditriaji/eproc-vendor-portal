@@ -432,20 +432,30 @@ export default function ApprovalsPage() {
                 </TableHeader>
                 <TableBody>
                   {approvals.map((approval: any) => {
-                    const typeInfo = typeConfig.PURCHASE_REQUISITION; // These are all PRs now
+                    // Use entityType if available, otherwise fall back to type or default
+                    const entityTypeKey = approval.entityType || approval.type || 'PURCHASE_REQUISITION';
+                    const typeInfo = typeConfig[entityTypeKey as keyof typeof typeConfig] || typeConfig.PURCHASE_REQUISITION;
                     const TypeIcon = typeInfo.icon;
                     const priorityKey = (approval.priority || 'MEDIUM') as keyof typeof priorityConfig;
                     const priority = priorityConfig[priorityKey] || priorityConfig.MEDIUM;
-                    const isOverdue = approval.requiredBy && new Date(approval.requiredBy) < new Date();
-                    // Map PR fields to expected format
-                    const entityNumber = approval.prNumber || '-';
-                    const requestedByName = approval.requester
-                      ? `${approval.requester.firstName || ''} ${approval.requester.lastName || ''}`.trim() || approval.requester.username || approval.requester.email
-                      : 'N/A';
+                    const isOverdue = (approval.requiredBy || approval.dueDate) && new Date(approval.requiredBy || approval.dueDate) < new Date();
+
+                    // Map fields to expected format based on entity type
+                    const entityNumber = approval.entityNumber || approval.prNumber || approval.poNumber || approval.invoiceNumber || '-';
+                    const requestedByName = approval.requestedBy
+                      || (approval.requester ? `${approval.requester.firstName || ''} ${approval.requester.lastName || ''}`.trim() || approval.requester.username || approval.requester.email : 'N/A');
                     const calculatedAmount = approval.items && Array.isArray(approval.items)
                       ? approval.items.reduce((sum: number, item: any) => sum + ((item.quantity || 0) * (item.unitPrice || 0)), 0)
                       : 0;
-                    const amount = approval.estimatedAmount || approval.totalAmount || calculatedAmount;
+                    const amount = approval.amount || approval.estimatedAmount || approval.totalAmount || calculatedAmount;
+
+                    // Determine detail page URL based on entity type
+                    const detailUrl = approval.viewUrl
+                      || (entityTypeKey === 'INVOICE' ? `/business/invoices/${approval.id}`
+                        : entityTypeKey === 'CONTRACT' ? `/business/contracts/${approval.id}`
+                          : entityTypeKey === 'PURCHASE_ORDER' ? `/business/purchase-orders/${approval.id}`
+                            : `/business/requisitions/${approval.id}`);
+
                     return (
                       <TableRow key={approval.id} className={isOverdue ? 'bg-red-50 dark:bg-red-950/20' : ''}>
                         <TableCell>
@@ -471,7 +481,7 @@ export default function ApprovalsPage() {
                         <TableCell>
                           {amount > 0 ? (
                             <span className="font-semibold">
-                              {formatCurrency(amount, approval.currency || 'USD')}
+                              {formatCurrency(amount, approval.currency || 'IDR')}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">N/A</span>
@@ -483,9 +493,9 @@ export default function ApprovalsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {approval.requiredBy ? (
+                          {(approval.requiredBy || approval.dueDate) ? (
                             <span className={`text-sm ${isOverdue ? 'font-semibold text-red-600' : ''}`}>
-                              {formatDate(approval.requiredBy)}
+                              {formatDate(approval.requiredBy || approval.dueDate)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground text-sm">No due date</span>
@@ -494,7 +504,7 @@ export default function ApprovalsPage() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/business/requisitions/${approval.id}`}>
+                              <Link href={detailUrl}>
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>

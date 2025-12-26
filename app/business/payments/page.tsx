@@ -39,14 +39,18 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { canProcessPayment } from '@/utils/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type PaymentStatusFilter = 'all' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+type PaymentStatusFilter = 'all' | 'REQUESTED' | 'APPROVED' | 'PROCESSED' | 'FAILED' | 'CANCELLED';
 
-const statusConfig = {
-  PENDING: { label: 'Pending', variant: 'default' as const, icon: Clock },
-  PROCESSING: { label: 'Processing', variant: 'default' as const, icon: Send },
-  COMPLETED: { label: 'Completed', variant: 'default' as const, icon: CheckCircle },
-  FAILED: { label: 'Failed', variant: 'destructive' as const, icon: XCircle },
-  CANCELLED: { label: 'Cancelled', variant: 'outline' as const, icon: XCircle },
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof Clock }> = {
+  REQUESTED: { label: 'Requested', variant: 'secondary', icon: Clock },
+  APPROVED: { label: 'Approved', variant: 'default', icon: CheckCircle },
+  PROCESSED: { label: 'Processed', variant: 'default', icon: CheckCircle },
+  FAILED: { label: 'Failed', variant: 'destructive', icon: XCircle },
+  CANCELLED: { label: 'Cancelled', variant: 'outline', icon: XCircle },
+  // Legacy support
+  PENDING: { label: 'Pending', variant: 'secondary', icon: Clock },
+  PROCESSING: { label: 'Processing', variant: 'default', icon: Send },
+  COMPLETED: { label: 'Completed', variant: 'default', icon: CheckCircle },
 };
 
 const paymentMethodConfig = {
@@ -81,9 +85,9 @@ export default function PaymentsPage() {
   // Calculate stats
   const stats = {
     total,
-    pending: payments.filter(p => p.status === 'PENDING').length,
-    processing: payments.filter(p => p.status === 'PROCESSING').length,
-    completed: payments.filter(p => p.status === 'COMPLETED').length,
+    pending: payments.filter(p => p.status === 'REQUESTED').length,
+    processing: payments.filter(p => p.status === 'APPROVED').length,
+    completed: payments.filter(p => p.status === 'PROCESSED').length,
     failed: payments.filter(p => p.status === 'FAILED').length,
     totalAmount: payments.reduce((sum, p) => sum + (p.amount || 0), 0),
   };
@@ -213,9 +217,9 @@ export default function PaymentsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="PROCESSING">Processing</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
+                <SelectItem value="REQUESTED">Requested</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="PROCESSED">Processed</SelectItem>
                 <SelectItem value="FAILED">Failed</SelectItem>
                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
               </SelectContent>
@@ -280,7 +284,7 @@ export default function PaymentsPage() {
                   {payments.map((payment) => {
                     const status = statusConfig[payment.status] || statusConfig.PENDING;
                     const StatusIcon = status.icon;
-                    const method = payment.paymentMethod && paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig] 
+                    const method = payment.paymentMethod && paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]
                       ? paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]
                       : { label: payment.paymentMethod || 'N/A', color: 'text-gray-600' };
                     return (
@@ -301,7 +305,7 @@ export default function PaymentsPage() {
                           <span className="text-sm">{formatDate(payment.paymentDate)}</span>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(payment.amount, payment.currency)}
+                          {formatCurrency(payment.amount, payment.currency || 'IDR')}
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="gap-1">
@@ -316,7 +320,7 @@ export default function PaymentsPage() {
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            {payment.status === 'PENDING' && canProcess && (
+                            {payment.status === 'REQUESTED' && canProcess && (
                               <Button variant="ghost" size="sm" className="text-blue-600">
                                 <Send className="h-4 w-4" />
                               </Button>
