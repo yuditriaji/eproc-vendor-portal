@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useCreateInvoiceMutation } from '@/store/api/financeApi';
+import { useCreateInvoiceFromGRMutation } from '@/store/api/workflowApi';
 import { useGetGoodsReceiptByIdQuery, useGetGoodsReceiptsQuery, useGetPurchaseOrdersQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ export default function CreateInvoicePage() {
   const grIdFromUrl = searchParams.get('grId');
   const { toast } = useToast();
   const [createInvoice, { isLoading }] = useCreateInvoiceMutation();
+  const [createInvoiceFromGR, { isLoading: isCreatingFromGR }] = useCreateInvoiceFromGRMutation();
 
   // Fetch all DELIVERED POs and COMPLETE GRs for dropdowns
   const { data: posResponse } = useGetPurchaseOrdersQuery({ pageSize: 100, status: 'DELIVERED' });
@@ -121,40 +123,68 @@ export default function CreateInvoicePage() {
         taxAmount: ((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0)) * (parseFloat(formData.taxRate) / 100),
       }));
 
-      const invoiceData = {
-        purchaseOrderId: formData.purchaseOrderId || undefined,
-        goodsReceiptId: formData.goodsReceiptId || undefined,
-        contractId: formData.contractId || undefined,
-        items: invoiceItems,
-        subtotal,
-        taxAmount,
-        totalAmount: total,
-        currency: formData.currency,
-        invoiceDate: formData.invoiceDate,
-        dueDate: formData.dueDate,
-        status: (asDraft ? 'DRAFT' : 'PENDING_APPROVAL') as any,
-        paymentTerms: formData.paymentTerms || undefined,
-        notes: formData.notes || undefined,
-      };
+      // Use workflow API if GR is selected (handles vendorId automatically)
+      if (formData.goodsReceiptId) {
+        await createInvoiceFromGR({
+          grId: formData.goodsReceiptId,
+          data: {
+            items: invoiceItems,
+            subtotal,
+            taxAmount,
+            totalAmount: total,
+            invoiceDate: formData.invoiceDate,
+            dueDate: formData.dueDate,
+            notes: formData.notes || undefined,
+          },
+        }).unwrap();
+      } else {
+        // For manual invoice creation without GR, need vendorId from PO
+        const selectedPO = purchaseOrders.find((po: any) => po.id === formData.purchaseOrderId);
+        const vendorId = selectedPO?.vendors?.[0]?.vendorId || selectedPO?.vendorId;
 
-      await createInvoice(invoiceData).unwrap();
+        if (!vendorId && !formData.purchaseOrderId) {
+          toast({
+            title: 'Missing Information',
+            description: 'Please select a Purchase Order or Goods Receipt to create an invoice',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const invoiceData = {
+          poId: formData.purchaseOrderId || undefined,
+          vendorId: vendorId,
+          items: invoiceItems,
+          amount: subtotal,
+          taxAmount,
+          totalAmount: total,
+          invoiceDate: formData.invoiceDate,
+          dueDate: formData.dueDate,
+          notes: formData.notes || undefined,
+        };
+
+        await createInvoice(invoiceData).unwrap();
+      }
 
       toast({
         title: 'Success',
-        description: `Invoice ${asDraft ? 'saved as draft' : 'submitted for approval'}`,
+        description: `Invoice ${asDraft ? 'saved as draft' : 'created successfully'}`,
       });
 
       router.push('/business/invoices');
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error?.data?.message || 'Failed to create invoice',
+        description: error?.data?.message || error?.message || 'Failed to create invoice',
         variant: 'destructive',
       });
     }
   };
 
-  const isFormValid = items.length > 0 && items.some(item => item.description && parseFloat(item.quantity) > 0);
+  const isFormValid = (formData.purchaseOrderId || formData.goodsReceiptId) &&
+    items.length > 0 &&
+    items.some(item => item.description && parseFloat(item.quantity) > 0);
+  const isSubmitting = isLoading || isCreatingFromGR;
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -405,17 +435,17 @@ export default function CreateInvoicePage() {
         <Button
           variant="outline"
           onClick={() => handleSubmit(true)}
-          disabled={!isFormValid || isLoading}
+          disabled={!isFormValid || isSubmitting}
         >
           <Save className="mr-2 h-4 w-4" />
           Save as Draft
         </Button>
         <Button
           onClick={() => handleSubmit(false)}
-          disabled={!isFormValid || isLoading}
+          disabled={!isFormValid || isSubmitting}
         >
           <Send className="mr-2 h-4 w-4" />
-          Submit for Approval
+          {isSubmitting ? 'Creating...' : 'Create Invoice'}
         </Button>
       </div>
     </div>
