@@ -36,6 +36,15 @@ interface PurchasingGroup {
 
 export const orgApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
+        // OrgUnits (for Budget creation)
+        getOrgUnits: builder.query<ApiResponse<any[]>, string | void>({
+            query: (type) => ({
+                url: 'org/org-units',
+                params: type ? { type } : undefined,
+            }),
+            providesTags: ['OrgUnits'],
+        }),
+
         // Company Codes
         getCompanyCodes: builder.query<ApiResponse<CompanyCode[]>, string | void>({
             query: (search) => ({
@@ -75,6 +84,7 @@ export const orgApi = baseApi.injectEndpoints({
 });
 
 export const {
+    useGetOrgUnitsQuery,
     useGetCompanyCodesQuery,
     useGetPlantsQuery,
     useGetPurchasingOrgsQuery,

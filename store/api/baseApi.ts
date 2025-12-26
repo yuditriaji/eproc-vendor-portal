@@ -82,6 +82,8 @@ export const baseApi = createApi({
     // P2P Workflow Tags
     'RFQs',
     'Quotations',
+    // OrgUnit for budgets
+    'OrgUnits',
   ],
   endpoints: () => ({}),
 });

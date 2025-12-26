@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { useCreateBudgetMutation } from '@/store/api/financeApi';
-import { useGetCompanyCodesQuery, useGetPurchasingGroupsQuery } from '@/store/api/orgApi';
+import { useGetOrgUnitsQuery, useGetPurchasingGroupsQuery } from '@/store/api/orgApi';
 import { canManageBudget } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,21 +28,21 @@ export default function CreateBudgetPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [createBudget, { isLoading }] = useCreateBudgetMutation();
 
-  // Fetch real organization data
-  const { data: companyCodesResponse, isLoading: loadingCompanyCodes } = useGetCompanyCodesQuery();
+  // Fetch organization units (for budget) and purchasing groups
+  const { data: orgUnitsResponse, isLoading: loadingOrgUnits } = useGetOrgUnitsQuery();
   const { data: purchasingGroupsResponse, isLoading: loadingPurchasingGroups } = useGetPurchasingGroupsQuery();
 
   // Handle both array response and {data: []} response formats
-  const companyCodes = Array.isArray(companyCodesResponse)
-    ? companyCodesResponse
-    : (companyCodesResponse?.data || []);
+  const orgUnits = Array.isArray(orgUnitsResponse)
+    ? orgUnitsResponse
+    : (orgUnitsResponse?.data || []);
   const purchasingGroups = Array.isArray(purchasingGroupsResponse)
     ? purchasingGroupsResponse
     : (purchasingGroupsResponse?.data || []);
 
   // Debug: log API responses
-  console.log('[Budget Create] Company Codes Response:', companyCodesResponse);
-  console.log('[Budget Create] Company Codes Parsed:', companyCodes);
+  console.log('[Budget Create] OrgUnits Response:', orgUnitsResponse);
+  console.log('[Budget Create] OrgUnits Parsed:', orgUnits);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -175,10 +175,10 @@ export default function CreateBudgetPage() {
                   value={formData.orgUnitId}
                   onValueChange={(value) => handleChange('orgUnitId', value)}
                   required
-                  disabled={loadingCompanyCodes}
+                  disabled={loadingOrgUnits}
                 >
                   <SelectTrigger id="orgUnitId">
-                    {loadingCompanyCodes ? (
+                    {loadingOrgUnits ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading...
@@ -188,14 +188,14 @@ export default function CreateBudgetPage() {
                     )}
                   </SelectTrigger>
                   <SelectContent>
-                    {companyCodes.length > 0 ? (
-                      companyCodes.map((cc: any) => (
-                        <SelectItem key={cc.id} value={cc.id}>
-                          {cc.code} - {cc.name}
+                    {orgUnits.length > 0 ? (
+                      orgUnits.map((ou: any) => (
+                        <SelectItem key={ou.id} value={ou.id}>
+                          {ou.companyCode || ou.pgCode || ou.id.slice(0, 8)} - {ou.name}
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="default-org">Default Organization</SelectItem>
+                      <SelectItem value="no-org-units" disabled>No organization units found - create one in Admin</SelectItem>
                     )}
                   </SelectContent>
                 </Select>

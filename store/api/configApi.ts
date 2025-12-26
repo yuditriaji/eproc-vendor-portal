@@ -193,7 +193,7 @@ export const configApi = baseApi.injectEndpoints({
     }),
 
     getPlants: builder.query<ApiResponse<any[]>, string | void>({
-      query: (companyCodeId) => 
+      query: (companyCodeId) =>
         companyCodeId ? `org/plants?companyCodeId=${companyCodeId}` : 'org/plants',
       providesTags: ['Plants'],
     }),
@@ -226,7 +226,7 @@ export const configApi = baseApi.injectEndpoints({
     }),
 
     getStorageLocations: builder.query<ApiResponse<any[]>, string | void>({
-      query: (plantId) => 
+      query: (plantId) =>
         plantId ? `org/storage-locations?plantId=${plantId}` : 'org/storage-locations',
       providesTags: ['StorageLocations'],
     }),
@@ -291,7 +291,7 @@ export const configApi = baseApi.injectEndpoints({
     }),
 
     getPurchasingGroups: builder.query<ApiResponse<any[]>, string | void>({
-      query: (purchasingOrgId) => 
+      query: (purchasingOrgId) =>
         purchasingOrgId ? `org/purchasing-groups?purchasingOrgId=${purchasingOrgId}` : 'org/purchasing-groups',
       providesTags: ['PurchasingGroups'],
     }),
@@ -315,7 +315,7 @@ export const configApi = baseApi.injectEndpoints({
 
     // Purchasing Org Assignments
     getPurchasingOrgAssignments: builder.query<ApiResponse<any[]>, string | void>({
-      query: (purchasingOrgId) => 
+      query: (purchasingOrgId) =>
         purchasingOrgId ? `org/porg-assignments?purchasingOrgId=${purchasingOrgId}` : 'org/porg-assignments',
       providesTags: ['PurchasingOrgAssignments'],
     }),
@@ -335,6 +335,48 @@ export const configApi = baseApi.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: ['PurchasingOrgAssignments'],
+    }),
+
+    // OrgUnits (for Budget)
+    getOrgUnits: builder.query<ApiResponse<any[]>, string | void>({
+      query: (type) => ({
+        url: 'org/org-units',
+        params: type ? { type } : undefined,
+      }),
+      providesTags: ['OrgUnits'],
+    }),
+
+    createOrgUnit: builder.mutation<ApiResponse<any>, {
+      name: string;
+      type: 'COMPANY_CODE' | 'PURCHASING_GROUP';
+      level: number;
+      parentId?: string;
+      companyCode?: string;
+      pgCode?: string;
+    }>({
+      query: (data) => ({
+        url: 'org/org-units',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['OrgUnits'],
+    }),
+
+    updateOrgUnit: builder.mutation<ApiResponse<any>, { id: string; data: { name?: string; parentId?: string } }>({
+      query: ({ id, data }) => ({
+        url: `org/org-units/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['OrgUnits'],
+    }),
+
+    deleteOrgUnit: builder.mutation<ApiResponse<null>, string>({
+      query: (id) => ({
+        url: `org/org-units/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['OrgUnits'],
     }),
 
     // Currencies
@@ -462,6 +504,12 @@ export const {
   useGetPurchasingOrgAssignmentsQuery,
   useAssignPurchasingOrgMutation,
   useDeletePurchasingOrgAssignmentMutation,
+
+  // OrgUnits
+  useGetOrgUnitsQuery,
+  useCreateOrgUnitMutation,
+  useUpdateOrgUnitMutation,
+  useDeleteOrgUnitMutation,
 
   // Currencies
   useCreateCurrencyMutation,
