@@ -302,7 +302,7 @@ export default function PaymentsPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{formatDate(payment.paymentDate)}</span>
+                          <span className="text-sm">{payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}</span>
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(payment.amount, payment.currency || 'IDR')}
