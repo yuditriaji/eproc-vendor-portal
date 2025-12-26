@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useCreateInvoiceMutation } from '@/store/api/financeApi';
-import { useGetGoodsReceiptByIdQuery } from '@/store/api/businessApi';
+import { useGetGoodsReceiptByIdQuery, useGetGoodsReceiptsQuery, useGetPurchaseOrdersQuery } from '@/store/api/businessApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,13 @@ export default function CreateInvoicePage() {
   const { toast } = useToast();
   const [createInvoice, { isLoading }] = useCreateInvoiceMutation();
 
-  // Fetch GR details if grId is provided
+  // Fetch all DELIVERED POs and COMPLETE GRs for dropdowns
+  const { data: posResponse } = useGetPurchaseOrdersQuery({ pageSize: 100, status: 'DELIVERED' });
+  const { data: grsResponse } = useGetGoodsReceiptsQuery({ pageSize: 100 });
+  const purchaseOrders: any[] = posResponse?.data || [];
+  const goodsReceipts: any[] = grsResponse?.data || [];
+
+  // Fetch single GR details if grId is provided
   const { data: grResponse } = useGetGoodsReceiptByIdQuery(grIdFromUrl || '', { skip: !grIdFromUrl });
   const gr: any = grResponse?.data ?? grResponse;
 
@@ -171,36 +177,49 @@ export default function CreateInvoicePage() {
       <Card>
         <CardHeader>
           <CardTitle>Reference Information</CardTitle>
-          <CardDescription>Link invoice to purchase order, contract, or goods receipt</CardDescription>
+          <CardDescription>Link invoice to a Purchase Order or Goods Receipt</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="purchaseOrderId">Purchase Order ID (Optional)</Label>
-              <Input
-                id="purchaseOrderId"
-                placeholder="Enter PO ID"
-                value={formData.purchaseOrderId}
-                onChange={(e) => handleChange('purchaseOrderId', e.target.value)}
-              />
+              <Label>Purchase Order (Delivered)</Label>
+              <Select
+                value={formData.purchaseOrderId || 'none'}
+                onValueChange={(v) => handleChange('purchaseOrderId', v === 'none' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a Purchase Order" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- No PO --</SelectItem>
+                  {purchaseOrders.map((po: any) => (
+                    <SelectItem key={po.id} value={po.id}>
+                      {po.poNumber} - {po.title || po.description || 'No title'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Only DELIVERED POs are shown</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contractId">Contract ID (Optional)</Label>
-              <Input
-                id="contractId"
-                placeholder="Enter Contract ID"
-                value={formData.contractId}
-                onChange={(e) => handleChange('contractId', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="goodsReceiptId">Goods Receipt ID (Optional)</Label>
-              <Input
-                id="goodsReceiptId"
-                placeholder="Enter GR ID"
-                value={formData.goodsReceiptId}
-                onChange={(e) => handleChange('goodsReceiptId', e.target.value)}
-              />
+              <Label>Goods Receipt</Label>
+              <Select
+                value={formData.goodsReceiptId || 'none'}
+                onValueChange={(v) => handleChange('goodsReceiptId', v === 'none' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a Goods Receipt" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- No GR --</SelectItem>
+                  {goodsReceipts.map((gr: any) => (
+                    <SelectItem key={gr.id} value={gr.id}>
+                      {gr.receiptNumber || gr.grNumber || gr.id.slice(0, 8)} - {gr.purchaseOrder?.poNumber || 'PO N/A'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Link to an existing Goods Receipt</p>
             </div>
           </div>
         </CardContent>

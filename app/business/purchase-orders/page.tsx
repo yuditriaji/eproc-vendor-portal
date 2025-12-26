@@ -39,18 +39,22 @@ import { formatCurrency, formatDate, formatCompactNumber, toNumber } from '@/lib
 import { canCreatePO } from '@/utils/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type POStatusFilter = 'all' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_VENDOR' | 'RECEIVED' | 'CANCELLED';
+type POStatusFilter = 'all' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'DELIVERED' | 'COMPLETED' | 'CANCELLED';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: typeof ShoppingCart }> = {
   DRAFT: { label: 'Draft', variant: 'secondary' as const, icon: ShoppingCart },
   PENDING_APPROVAL: { label: 'Pending Approval', variant: 'default' as const, icon: Clock },
   APPROVED: { label: 'Approved', variant: 'default' as const, icon: CheckCircle },
   REJECTED: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle },
+  IN_PROGRESS: { label: 'In Progress', variant: 'default' as const, icon: Send },
+  DELIVERED: { label: 'Delivered', variant: 'default' as const, icon: Package },
+  COMPLETED: { label: 'Completed', variant: 'default' as const, icon: CheckCircle },
+  CANCELLED: { label: 'Cancelled', variant: 'outline' as const, icon: XCircle },
+  // Legacy statuses for compatibility
   SENT_TO_VENDOR: { label: 'Sent to Vendor', variant: 'default' as const, icon: Send },
   SENT: { label: 'Sent', variant: 'default' as const, icon: Send },
   PARTIALLY_RECEIVED: { label: 'Partially Received', variant: 'outline' as const, icon: Package },
   RECEIVED: { label: 'Received', variant: 'default' as const, icon: Package },
-  CANCELLED: { label: 'Cancelled', variant: 'outline' as const, icon: XCircle },
   CLOSED: { label: 'Closed', variant: 'secondary' as const, icon: CheckCircle },
 };
 
