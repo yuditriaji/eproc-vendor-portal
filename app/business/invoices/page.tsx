@@ -41,14 +41,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type InvoiceStatusFilter = 'all' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'PAID' | 'REJECTED' | 'CANCELLED' | 'OVERDUE';
 
-const statusConfig = {
-  DRAFT: { label: 'Draft', variant: 'secondary' as const, icon: Receipt },
-  PENDING_APPROVAL: { label: 'Pending Approval', variant: 'default' as const, icon: Clock },
-  APPROVED: { label: 'Approved', variant: 'default' as const, icon: CheckCircle },
-  PAID: { label: 'Paid', variant: 'default' as const, icon: CheckCircle },
-  REJECTED: { label: 'Rejected', variant: 'destructive' as const, icon: XCircle },
-  CANCELLED: { label: 'Cancelled', variant: 'outline' as const, icon: XCircle },
-  OVERDUE: { label: 'Overdue', variant: 'destructive' as const, icon: AlertCircle },
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof Receipt }> = {
+  DRAFT: { label: 'Draft', variant: 'secondary', icon: Receipt },
+  PENDING: { label: 'Pending', variant: 'default', icon: Clock },
+  PENDING_APPROVAL: { label: 'Pending Approval', variant: 'default', icon: Clock },
+  APPROVED: { label: 'Approved', variant: 'default', icon: CheckCircle },
+  PAID: { label: 'Paid', variant: 'default', icon: CheckCircle },
+  REJECTED: { label: 'Rejected', variant: 'destructive', icon: XCircle },
+  CANCELLED: { label: 'Cancelled', variant: 'outline', icon: XCircle },
+  OVERDUE: { label: 'Overdue', variant: 'destructive', icon: AlertCircle },
+  DISPUTED: { label: 'Disputed', variant: 'destructive', icon: AlertCircle },
 };
 
 export default function InvoicesPage() {
@@ -64,7 +66,7 @@ export default function InvoicesPage() {
     status: statusFilter === 'all' ? undefined : statusFilter,
     search: searchQuery || undefined,
   });
-  
+
   // Fetch invoice statistics from backend
   const { data: statsResponse, isLoading: statsLoading } = useGetInvoiceStatisticsQuery();
   const invoiceStats = statsResponse?.data;

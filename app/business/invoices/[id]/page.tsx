@@ -17,14 +17,16 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
-const statusConfig = {
-  DRAFT: { label: 'Draft', variant: 'secondary' as const },
-  PENDING_APPROVAL: { label: 'Pending Approval', variant: 'outline' as const },
-  APPROVED: { label: 'Approved', variant: 'default' as const },
-  PAID: { label: 'Paid', variant: 'default' as const },
-  REJECTED: { label: 'Rejected', variant: 'destructive' as const },
-  CANCELLED: { label: 'Cancelled', variant: 'destructive' as const },
-  OVERDUE: { label: 'Overdue', variant: 'destructive' as const },
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  DRAFT: { label: 'Draft', variant: 'secondary' },
+  PENDING: { label: 'Pending', variant: 'outline' },
+  PENDING_APPROVAL: { label: 'Pending Approval', variant: 'outline' },
+  APPROVED: { label: 'Approved', variant: 'default' },
+  PAID: { label: 'Paid', variant: 'default' },
+  REJECTED: { label: 'Rejected', variant: 'destructive' },
+  CANCELLED: { label: 'Cancelled', variant: 'destructive' },
+  OVERDUE: { label: 'Overdue', variant: 'destructive' },
+  DISPUTED: { label: 'Disputed', variant: 'destructive' },
 };
 
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
