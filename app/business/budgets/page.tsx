@@ -86,11 +86,6 @@ export default function BudgetsPage() {
     ? ((stats.totalUtilized / stats.totalAllocated) * 100).toFixed(1)
     : '0.0';
 
-  const calculateUtilization = (budget: any) => {
-    if (!budget.allocatedAmount || budget.allocatedAmount === 0) return 0;
-    return ((budget.spentAmount || 0) / budget.allocatedAmount) * 100;
-  };
-
   const getUtilizationColor = (percentage: number) => {
     if (percentage >= 90) return 'text-red-600';
     if (percentage >= 75) return 'text-orange-600';
@@ -287,18 +282,21 @@ export default function BudgetsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {budgets.map((budget) => {
-                    const status = statusConfig[budget.status] || statusConfig.ACTIVE;
+                  {budgets.map((budget: any) => {
+                    const status = statusConfig[budget.status as keyof typeof statusConfig] || statusConfig.ACTIVE;
                     const StatusIcon = status.icon;
-                    const utilization = calculateUtilization(budget);
+                    // Map backend fields: totalAmount, availableAmount
+                    const allocated = Number(budget.totalAmount) || 0;
+                    const available = Number(budget.availableAmount) || 0;
+                    const spent = allocated - available;
+                    const utilization = allocated > 0 ? (spent / allocated) * 100 : 0;
                     const utilizationColor = getUtilizationColor(utilization);
-                    const remaining = budget.remainingAmount || 0;
                     return (
                       <TableRow key={budget.id}>
                         <TableCell className="font-medium">
-                          {budget.name}
+                          {budget.orgUnit?.name || budget.name || `Budget ${budget.fiscalYear}`}
                         </TableCell>
-                        <TableCell>{budget.departmentName || 'N/A'}</TableCell>
+                        <TableCell>{budget.orgUnit?.name || budget.departmentName || 'N/A'}</TableCell>
                         <TableCell>
                           <span className="text-sm">{budget.fiscalYear}</span>
                         </TableCell>
@@ -306,15 +304,15 @@ export default function BudgetsPage() {
                           <span className="text-sm capitalize">{budget.period?.toLowerCase() || 'Annual'}</span>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(budget.allocatedAmount, budget.currency)}
+                          {formatCurrency(allocated, budget.currency || 'IDR')}
                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-semibold">
-                              {formatCurrency(budget.spentAmount || 0, budget.currency)}
+                              {formatCurrency(spent, budget.currency || 'IDR')}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {formatCurrency(remaining, budget.currency)} left
+                              {formatCurrency(available, budget.currency || 'IDR')} left
                             </div>
                           </div>
                         </TableCell>

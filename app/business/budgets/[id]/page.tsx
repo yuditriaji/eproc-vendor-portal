@@ -62,7 +62,8 @@ export default function BudgetDetailPage({ params }: { params: Promise<{ id: str
     const { data: allBudgetsResponse } = useGetBudgetsQuery({ pageSize: 100 });
     const [transferBudget, { isLoading: isTransferring }] = useTransferBudgetMutation();
 
-    const budget: any = budgetResponse?.data;
+    // Handle both wrapped and direct response formats
+    const budget: any = budgetResponse?.data ?? budgetResponse;
     const allBudgets = allBudgetsResponse?.data || [];
     const otherBudgets = allBudgets.filter((b: any) => b.id !== id);
 
