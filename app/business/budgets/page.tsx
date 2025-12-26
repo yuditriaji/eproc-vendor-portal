@@ -63,9 +63,12 @@ export default function BudgetsPage() {
     search: searchQuery || undefined,
   });
 
+  // Handle both new format {data, total, page, pageSize} and legacy format with meta
   const budgets = budgetsResponse?.data || [];
-  const totalPages = budgetsResponse?.meta?.totalPages || 1;
-  const total = budgetsResponse?.meta?.total || 0;
+  const totalFromResponse = budgetsResponse?.total ?? budgetsResponse?.meta?.total ?? 0;
+  const pageSizeFromResponse = budgetsResponse?.pageSize ?? pageSize;
+  const totalPages = Math.ceil(totalFromResponse / pageSizeFromResponse) || 1;
+  const total = totalFromResponse;
 
   const canManage = canManageBudget(user);
 
@@ -79,7 +82,7 @@ export default function BudgetsPage() {
     totalUtilized: budgets.reduce((sum, b) => sum + (b.spentAmount || 0), 0),
   };
 
-  const utilizationRate = stats.totalAllocated > 0 
+  const utilizationRate = stats.totalAllocated > 0
     ? ((stats.totalUtilized / stats.totalAllocated) * 100).toFixed(1)
     : '0.0';
 
