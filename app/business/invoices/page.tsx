@@ -296,7 +296,7 @@ export default function InvoicesPage() {
                           </span>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {formatCurrency(invoice.totalAmount, invoice.currency)}
+                          {formatCurrency(invoice.totalAmount, invoice.currency || 'IDR')}
                         </TableCell>
                         <TableCell>
                           <Badge variant={status.variant} className="gap-1">
