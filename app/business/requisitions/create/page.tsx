@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { useCreatePurchaseRequisitionMutation } from '@/store/api/businessApi';
+import { useGetBudgetsQuery } from '@/store/api/financeApi';
 import { canCreatePR } from '@/utils/permissions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -18,9 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Plus, Trash } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/formatters';
 
 interface PRItem {
   id: string;
@@ -35,6 +39,10 @@ export default function CreatePRPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [createPR, { isLoading }] = useCreatePurchaseRequisitionMutation();
 
+  // Fetch available budgets
+  const { data: budgetsData, isLoading: budgetsLoading } = useGetBudgetsQuery({ pageSize: 100 });
+  const budgets = budgetsData?.data || [];
+
   const [formData, setFormData] = useState({
     title: '',
     department: '',
@@ -43,11 +51,34 @@ export default function CreatePRPage() {
     requiredBy: '',
     justification: '',
     notes: '',
+    budgetId: '',
   });
 
   const [items, setItems] = useState<PRItem[]>([
     { id: '1', description: '', quantity: '', unit: 'PCS', estimatedPrice: '' },
   ]);
+
+  // Calculate total estimate
+  const totalEstimate = useMemo(() =>
+    items.reduce(
+      (sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.estimatedPrice) || 0),
+      0
+    ),
+    [items]
+  );
+
+  // Get selected budget info
+  const selectedBudget: any = useMemo(() =>
+    budgets.find((b: any) => b.id === formData.budgetId),
+    [budgets, formData.budgetId]
+  );
+
+  // Check if budget is sufficient
+  const isBudgetSufficient = useMemo(() => {
+    if (!selectedBudget) return true; // No budget selected
+    const available = Number(selectedBudget.availableAmount) || 0;
+    return totalEstimate <= available;
+  }, [selectedBudget, totalEstimate]);
 
   // Check permission
   if (!canCreatePR(user)) {
@@ -67,8 +98,9 @@ export default function CreatePRPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createPR({
+      const payload = {
         ...formData,
+        budgetId: formData.budgetId && formData.budgetId !== 'none' ? formData.budgetId : undefined,
         items: items.map((item) => ({
           id: item.id,
           description: item.description,
@@ -76,11 +108,12 @@ export default function CreatePRPage() {
           unitPrice: parseFloat(item.estimatedPrice),
           totalPrice: parseFloat(item.quantity) * parseFloat(item.estimatedPrice),
         })),
-      }).unwrap();
+      };
+      await createPR(payload).unwrap();
       toast.success('Purchase Requisition created successfully');
       router.push('/business/requisitions');
-    } catch (error) {
-      toast.error('Failed to create purchase requisition');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create purchase requisition');
       console.error('Error creating PR:', error);
     }
   };
@@ -108,12 +141,6 @@ export default function CreatePRPage() {
       setItems((prev) => prev.filter((item) => item.id !== id));
     }
   };
-
-  const totalEstimate = items.reduce(
-    (sum, item) =>
-      sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.estimatedPrice) || 0),
-    0
-  );
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -207,6 +234,59 @@ export default function CreatePRPage() {
                   required
                 />
               </div>
+            </div>
+
+            {/* Budget Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="budgetId">Budget (Optional)</Label>
+              <p className="text-xs text-muted-foreground">Link this requisition to a budget for financial control</p>
+              {budgetsLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select
+                  value={formData.budgetId}
+                  onValueChange={(value) => handleChange('budgetId', value)}
+                >
+                  <SelectTrigger id="budgetId">
+                    <SelectValue placeholder="Select budget (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No budget</SelectItem>
+                    {budgets.map((budget: any) => (
+                      <SelectItem key={budget.id} value={budget.id}>
+                        {budget.orgUnit?.name || budget.name || `Budget ${budget.fiscalYear}`} - Available: {formatCurrency(budget.availableAmount || 0, budget.currency || 'IDR')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Budget Availability Indicator */}
+              {selectedBudget && (
+                <div className="mt-2">
+                  {isBudgetSufficient ? (
+                    <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-700 dark:text-green-400">
+                        Budget available: {formatCurrency(selectedBudget.availableAmount, selectedBudget.currency || 'IDR')}
+                        {totalEstimate > 0 && (
+                          <span className="ml-2">
+                            (After this PR: {formatCurrency((selectedBudget.availableAmount || 0) - totalEstimate, selectedBudget.currency || 'IDR')})
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        Insufficient budget! Available: {formatCurrency(selectedBudget.availableAmount, selectedBudget.currency || 'IDR')},
+                        Estimated: {formatCurrency(totalEstimate, selectedBudget.currency || 'IDR')}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
