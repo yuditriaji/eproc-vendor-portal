@@ -281,20 +281,28 @@ export default function PaymentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment) => {
-                    const status = statusConfig[payment.status] || statusConfig.PENDING;
+                  {payments.map((payment: any) => {
+                    const status = statusConfig[payment.status] || statusConfig.REQUESTED;
                     const StatusIcon = status.icon;
-                    const method = payment.paymentMethod && paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]
-                      ? paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]
-                      : { label: payment.paymentMethod || 'N/A', color: 'text-gray-600' };
+
+                    // Extract nested data
+                    const vendorName = payment.vendorName || payment.invoice?.vendor?.name || 'N/A';
+                    const invoiceNumber = payment.invoiceNumber || payment.invoice?.invoiceNumber || 'N/A';
+                    const paymentMethod = payment.method || payment.paymentMethod || 'N/A';
+                    const paymentDate = payment.processedDate || payment.paymentDate || payment.createdAt;
+
+                    const method = paymentMethodConfig[paymentMethod as keyof typeof paymentMethodConfig]
+                      ? paymentMethodConfig[paymentMethod as keyof typeof paymentMethodConfig]
+                      : { label: paymentMethod, color: 'text-gray-600' };
+
                     return (
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">
                           {payment.paymentNumber}
                         </TableCell>
-                        <TableCell>{payment.vendorName || 'N/A'}</TableCell>
+                        <TableCell>{vendorName}</TableCell>
                         <TableCell>
-                          {payment.invoiceNumber || 'N/A'}
+                          {invoiceNumber}
                         </TableCell>
                         <TableCell>
                           <span className={`text-sm font-medium ${method.color}`}>
@@ -302,7 +310,7 @@ export default function PaymentsPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}</span>
+                          <span className="text-sm">{paymentDate ? formatDate(paymentDate) : 'N/A'}</span>
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(payment.amount, payment.currency || 'IDR')}
